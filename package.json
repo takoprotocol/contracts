@@ -1,0 +1,36 @@
+{
+  "name": "v1-core",
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.59.0",
+    "@typescript-eslint/parser": "^5.59.0",
+    "eslint": "^8.39.0",
+    "hardhat": "^2.12.2"
+  },
+  "author": "Tako",
+  "license": "ISC",
+  "dependencies": {
+    "@nomicfoundation/hardhat-chai-matchers": "^1.0.4",
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.6",
+    "@nomiclabs/hardhat-ethers": "^2.2.1",
+    "@nomiclabs/hardhat-etherscan": "^3.1.2",
+    "@openzeppelin/contracts": "^4.8.0",
+    "@typechain/ethers-v5": "^10.1.1",
+    "@typechain/hardhat": "^6.1.4",
+    "@types/mocha": "^10.0.1",
+    "chai": "^4.3.6",
+    "ethereum-waffle": "^4.0.10",
+    "ethers": "^5.7.2",
+    "hardhat-gas-reporter": "^1.0.2",
+    "solidity-coverage": "^0.7.22",
+    "ts-node": "^10.9.1",
+    "typechain": "^8.1.1",
+    "typescript": "^4.8.4"
+  },
+  "scripts": {
+    "compile": "npx hardhat compile",
+    "test": "npm run compile && TRACK_GAS=true REPORT_GAS=true hardhat test",
+    "quick-test": "REPORT_GAS=true hardhat test",
+    "run:takoLens": "npx hardhat run scripts/cli_tako_lens.ts",
+    "run:lens": "npx hardhat run scripts/lens.ts"
+  }
+}
