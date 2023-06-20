@@ -11,6 +11,7 @@ library Errors {
     error WrongAmount();
     error ParamsrInvalid();
 
+    error NotReachedMinimum();
     error InsufficientBalance();
     error InsufficientInputAmount();
     error ETHTransferFailed();

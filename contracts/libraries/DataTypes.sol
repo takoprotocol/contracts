@@ -10,26 +10,6 @@ library DataTypes {
         uint256 deadline;
     }
 
-    struct MirrorWithSigData {
-        uint256 profileId;
-        uint256 profileIdPointed;
-        uint256 pubIdPointed;
-        bytes referenceModuleData;
-        address referenceModule;
-        bytes referenceModuleInitData;
-        EIP712Signature sig;
-    }
-
-    struct PostWithSigData {
-        uint256 profileId;
-        string contentURI;
-        address collectModule;
-        bytes collectModuleInitData;
-        address referenceModule;
-        bytes referenceModuleInitData;
-        EIP712Signature sig;
-    }
-
     enum AuditState {
         Pending,
         Refuse,
