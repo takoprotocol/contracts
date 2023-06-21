@@ -19,21 +19,34 @@ interface ILensHub {
         uint256 deadline;
     }
 
-    struct MirrorWithSigData {
-        uint256 profileId;
-        uint256 profileIdPointed;
-        uint256 pubIdPointed;
-        bytes referenceModuleData;
-        address referenceModule;
-        bytes referenceModuleInitData;
-        EIP712Signature sig;
-    }
-
     struct PostWithSigData {
         uint256 profileId;
         string contentURI;
         address collectModule;
         bytes collectModuleInitData;
+        address referenceModule;
+        bytes referenceModuleInitData;
+        EIP712Signature sig;
+    }
+
+    struct CommentWithSigData {
+        uint256 profileId;
+        string contentURI;
+        uint256 profileIdPointed;
+        uint256 pubIdPointed;
+        bytes referenceModuleData;
+        address collectModule;
+        bytes collectModuleInitData;
+        address referenceModule;
+        bytes referenceModuleInitData;
+        EIP712Signature sig;
+    }
+
+    struct MirrorWithSigData {
+        uint256 profileId;
+        uint256 profileIdPointed;
+        uint256 pubIdPointed;
+        bytes referenceModuleData;
         address referenceModule;
         bytes referenceModuleInitData;
         EIP712Signature sig;
@@ -45,6 +58,17 @@ interface ILensHub {
     function ownerOf(uint256 tokenId) external returns (address);
 
     /**
+     * @notice Publishes a post to a given profile via signature with the specified parameters.
+     *
+     * @param vars A PostWithSigData struct containing the regular parameters and an EIP712Signature struct.
+     *
+     * @return uint256 An integer representing the post's publication ID.
+     */
+    function postWithSig(
+        PostWithSigData calldata vars
+    ) external returns (uint256);
+
+    /**
      * @notice Publishes a mirror to a given profile via signature with the specified parameters.
      *
      * @param vars A MirrorWithSigData struct containing the regular parameters and an EIP712Signature struct.
@@ -53,6 +77,17 @@ interface ILensHub {
      */
     function mirrorWithSig(
         MirrorWithSigData calldata vars
+    ) external returns (uint256);
+
+    /**
+     * @notice Publishes a comment to a given profile via signature with the specified parameters.
+     *
+     * @param vars A CommentWithSigData struct containing the regular parameters and an EIP712Signature struct.
+     *
+     * @return uint256 An integer representing the comment's publication ID.
+     */
+    function commentWithSig(
+        CommentWithSigData calldata vars
     ) external returns (uint256);
 
     /**
