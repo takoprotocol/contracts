@@ -12,13 +12,6 @@ import {DataTypes} from "../libraries/DataTypes.sol";
  * You'll find all the events and external functions, as well as the reasoning behind them here.
  */
 interface ILensHub {
-    struct EIP712Signature {
-        uint8 v;
-        bytes32 r;
-        bytes32 s;
-        uint256 deadline;
-    }
-
     struct PostWithSigData {
         uint256 profileId;
         string contentURI;
@@ -26,7 +19,7 @@ interface ILensHub {
         bytes collectModuleInitData;
         address referenceModule;
         bytes referenceModuleInitData;
-        EIP712Signature sig;
+        DataTypes.EIP712Signature sig;
     }
 
     struct CommentWithSigData {
@@ -39,7 +32,7 @@ interface ILensHub {
         bytes collectModuleInitData;
         address referenceModule;
         bytes referenceModuleInitData;
-        EIP712Signature sig;
+        DataTypes.EIP712Signature sig;
     }
 
     struct MirrorWithSigData {
@@ -49,7 +42,7 @@ interface ILensHub {
         bytes referenceModuleData;
         address referenceModule;
         bytes referenceModuleInitData;
-        EIP712Signature sig;
+        DataTypes.EIP712Signature sig;
     }
 
     /**

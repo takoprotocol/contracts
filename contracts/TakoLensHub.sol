@@ -6,6 +6,7 @@ import "./access/Ownable.sol";
 import "./libraries/DataTypes.sol";
 import "./libraries/Errors.sol";
 import "./interfaces/ILensHub.sol";
+import "./libraries/SigUtils.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -44,13 +45,40 @@ contract TakoLensHub is Ownable {
         BidType bidType;
     }
 
-    uint8 internal maxToProfileCounter = 5;
+    struct MomokaBidData {
+        string contentURI;
+        string mirror;
+        string commentOn;
+        address bidToken;
+        uint256 bidAmount;
+        uint256 duration;
+        uint256[] toProfiles;
+    }
+
+    struct MomokaContent {
+        string mirror;
+        string commentOn;
+        string contentURI;
+        address bidToken;
+        address bidAddress;
+        uint256 bidAmount;
+        uint256 bidExpires;
+        uint256[] toProfiles;
+        DataTypes.AuditState state;
+        BidType bidType;
+    }
+
+    uint8 public maxToProfileCounter = 5;
     address public feeCollector;
     uint256 public feeRate = 1 * 10 ** 8;
     uint256 _bidCounter;
-    mapping(address => mapping(address => uint256)) _minBidByTokenByWallet;
     mapping(address => bool) internal _bidTokenWhitelisted;
+    mapping(address => mapping(address => uint256)) _minBidByTokenByWallet;
     mapping(uint256 => Content) internal _contentByIndex;
+
+    uint256 _momokaBidCounter;
+    mapping(address => bool) internal _relayerWhitelisted;
+    mapping(uint256 => MomokaContent) internal _momokaContentByIndex;
 
     uint256 public constant FEE_DENOMINATOR = 10 ** 10;
 
@@ -66,6 +94,13 @@ contract TakoLensHub is Ownable {
         bool whitelist
     ) external onlyOwner {
         _bidTokenWhitelisted[token] = whitelist;
+    }
+
+    function whitelistRelayer(
+        address relayer,
+        bool whitelist
+    ) external onlyOwner {
+        _relayerWhitelisted[relayer] = whitelist;
     }
 
     function setLensHub(address hub) external onlyOwner {
@@ -101,14 +136,16 @@ contract TakoLensHub is Ownable {
         _bid(vars, BidType.Comment);
     }
 
-    function updateBid(BidData calldata vars, uint256 index) external {
-        _cancelBid(index);
-        Content memory content = _contentByIndex[index];
-        _bid(vars, content.bidType);
+    function bidMomokaPost(MomokaBidData calldata vars) external payable {
+        _bidMomoka(vars, BidType.Post);
     }
 
-    function cancelBid(uint256 index) external {
-        _cancelBid(index);
+    function bidMomokaMirror(MomokaBidData calldata vars) external payable {
+        _bidMomoka(vars, BidType.Mirror);
+    }
+
+    function bidMomokaComment(MomokaBidData calldata vars) external {
+        _bidMomoka(vars, BidType.Comment);
     }
 
     // Curator
@@ -118,11 +155,12 @@ contract TakoLensHub is Ownable {
         DataTypes.EIP712Signature calldata sig
     ) external {
         Content memory content = _contentByIndex[index];
+        _validateExpires(content.bidExpires);
         _validateProfile(profileId, content.toProfiles);
         ILensHub.PostWithSigData memory lensData;
         lensData.profileId = profileId;
         lensData.contentURI = content.contentURI;
-        lensData.sig = ILensHub.EIP712Signature(
+        lensData.sig = DataTypes.EIP712Signature(
             sig.v,
             sig.r,
             sig.s,
@@ -130,6 +168,7 @@ contract TakoLensHub is Ownable {
         );
         _postWithSign(lensData);
         _loan(content.bidToken, content.bidAmount);
+        _contentByIndex[index].state = DataTypes.AuditState.Pass;
     }
 
     function auditBidMirror(
@@ -138,12 +177,13 @@ contract TakoLensHub is Ownable {
         DataTypes.EIP712Signature calldata sig
     ) external {
         Content memory content = _contentByIndex[index];
+        _validateExpires(content.bidExpires);
         _validateProfile(profileId, content.toProfiles);
         ILensHub.MirrorWithSigData memory lensData;
         lensData.profileId = profileId;
         lensData.profileIdPointed = content.profileIdPointed;
         lensData.pubIdPointed = content.pubIdPointed;
-        lensData.sig = ILensHub.EIP712Signature(
+        lensData.sig = DataTypes.EIP712Signature(
             sig.v,
             sig.r,
             sig.s,
@@ -151,6 +191,7 @@ contract TakoLensHub is Ownable {
         );
         _mirrorWithSign(lensData);
         _loan(content.bidToken, content.bidAmount);
+        _contentByIndex[index].state = DataTypes.AuditState.Pass;
     }
 
     function auditBidComment(
@@ -159,12 +200,13 @@ contract TakoLensHub is Ownable {
         DataTypes.EIP712Signature calldata sig
     ) external {
         Content memory content = _contentByIndex[index];
+        _validateExpires(content.bidExpires);
         _validateProfile(profileId, content.toProfiles);
         ILensHub.CommentWithSigData memory lensData;
         lensData.profileId = profileId;
         lensData.profileIdPointed = content.profileIdPointed;
         lensData.pubIdPointed = content.pubIdPointed;
-        lensData.sig = ILensHub.EIP712Signature(
+        lensData.sig = DataTypes.EIP712Signature(
             sig.v,
             sig.r,
             sig.s,
@@ -172,6 +214,69 @@ contract TakoLensHub is Ownable {
         );
         _commentWithSign(lensData);
         _loan(content.bidToken, content.bidAmount);
+        _contentByIndex[index].state = DataTypes.AuditState.Pass;
+    }
+
+    function loanWithSig(
+        uint256 index,
+        uint256 profileId,
+        address relayer,
+        DataTypes.EIP712Signature calldata sig
+    ) external {
+        if (!_relayerWhitelisted[relayer]) {
+            revert Errors.NotWhitelisted();
+        }
+        MomokaContent memory content = _momokaContentByIndex[index];
+        _validateExpires(content.bidExpires);
+        _validateProfile(profileId, content.toProfiles);
+        SigUtils._validateRecoveredAddress(
+            SigUtils._calculateDigest(
+                keccak256(abi.encode(index, _msgSender(), sig.deadline)),
+                "TakoLensHub"
+            ),
+            relayer,
+            sig
+        );
+        _loan(content.bidToken, content.bidAmount);
+        _contentByIndex[index].state = DataTypes.AuditState.Pass;
+    }
+
+    // View
+    function getMinBidAmount(
+        address wallet,
+        address token
+    ) external view returns (uint256) {
+        return _minBidByTokenByWallet[wallet][token];
+    }
+
+    function isBidTokenWhitelisted(address token) external view returns (bool) {
+        return _bidTokenWhitelisted[token];
+    }
+
+    function getContentByIndex(
+        uint256 index
+    ) external view returns (Content memory) {
+        return _contentByIndex[index];
+    }
+
+    function getMomokaContentByIndex(
+        uint256 index
+    ) external view returns (MomokaContent memory) {
+        return _momokaContentByIndex[index];
+    }
+
+    function getBidCounter() external view returns (uint256) {
+        return _bidCounter;
+    }
+
+    function getMomokaBidCunter() external view returns (uint256) {
+        return _momokaBidCounter;
+    }
+
+    function _validateExpires(uint256 expires) internal view {
+        if (expires < block.timestamp) {
+            revert Errors.Expired();
+        }
     }
 
     function _validateContentIndex(uint256 index) internal view {
@@ -244,7 +349,6 @@ contract TakoLensHub is Ownable {
         Content memory content;
         content.contentURI = vars.contentURI;
         content.bidAmount = vars.bidAmount;
-        content.state = DataTypes.AuditState.Pending;
         content.bidToken = vars.bidToken;
         content.bidAmount = vars.bidAmount;
         content.bidAddress = _msgSender();
@@ -259,20 +363,29 @@ contract TakoLensHub is Ownable {
         _contentByIndex[counter] = content;
     }
 
-    function _cancelBid(uint256 index) internal {
-        _validateContentIndex(index);
-        Content memory content = _contentByIndex[index];
-        if (content.bidAddress != _msgSender()) revert Errors.NotBidder();
-        if (content.state != DataTypes.AuditState.Pending)
-            revert Errors.BidIsClose();
-        if (content.bidAmount > 0) {
-            _sendTokenOrETH(
-                content.bidToken,
-                content.bidAddress,
-                content.bidAmount
-            );
+    function _bidMomoka(MomokaBidData calldata vars, BidType bidType) internal {
+        _validateBidAndGetToken(vars.bidToken, vars.bidAmount, vars.toProfiles);
+        uint256 counter = ++_momokaBidCounter;
+        MomokaContent memory content;
+        content.bidAmount = vars.bidAmount;
+        content.bidToken = vars.bidToken;
+        content.bidAmount = vars.bidAmount;
+        content.bidAddress = _msgSender();
+        content.bidExpires = block.timestamp + vars.duration;
+        content.toProfiles = vars.toProfiles;
+        content.bidType = bidType;
+        if (bidType == BidType.Post) {
+            content.contentURI = vars.contentURI;
         }
-        _contentByIndex[index].state = DataTypes.AuditState.Cancel;
+        if (bidType == BidType.Comment) {
+            content.contentURI = vars.contentURI;
+            content.commentOn = vars.commentOn;
+        }
+        if (bidType == BidType.Mirror) {
+            content.mirror = vars.mirror;
+        }
+        content.state = DataTypes.AuditState.Pending;
+        _momokaContentByIndex[counter] = content;
     }
 
     function _loan(address token, uint256 amount) internal {
