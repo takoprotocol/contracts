@@ -124,28 +124,33 @@ contract TakoLensHub is Ownable {
         _minBidByTokenByWallet[_msgSender()][token] = min;
     }
 
-    function bidPost(BidData calldata vars) external payable {
-        _bid(vars, BidType.Post);
+    function bid(BidData calldata vars, BidType bidType) external payable {
+        _bid(vars, bidType);
     }
 
-    function bidMirror(BidData calldata vars) external payable {
-        _bid(vars, BidType.Mirror);
+    function bidArray(
+        BidData[] calldata vars,
+        BidType bidType
+    ) external payable {
+        for (uint256 i = 0; i < vars.length; i++) {
+            _bid(vars[i], bidType);
+        }
     }
 
-    function bidComment(BidData calldata vars) external {
-        _bid(vars, BidType.Comment);
+    function bidMomoka(
+        MomokaBidData calldata vars,
+        BidType bidType
+    ) external payable {
+        _bidMomoka(vars, bidType);
     }
 
-    function bidMomokaPost(MomokaBidData calldata vars) external payable {
-        _bidMomoka(vars, BidType.Post);
-    }
-
-    function bidMomokaMirror(MomokaBidData calldata vars) external payable {
-        _bidMomoka(vars, BidType.Mirror);
-    }
-
-    function bidMomokaComment(MomokaBidData calldata vars) external {
-        _bidMomoka(vars, BidType.Comment);
+    function bidMomokaArray(
+        MomokaBidData[] calldata vars,
+        BidType bidType
+    ) external payable {
+        for (uint256 i = 0; i < vars.length; i++) {
+            _bidMomoka(vars[i], bidType);
+        }
     }
 
     // Curator
