@@ -9,6 +9,7 @@
   "author": "Tako",
   "license": "ISC",
   "dependencies": {
+    "@defi-wonderland/smock": "^2.3.5",
     "@nomicfoundation/hardhat-chai-matchers": "^1.0.4",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.6",
     "@nomiclabs/hardhat-ethers": "^2.2.1",

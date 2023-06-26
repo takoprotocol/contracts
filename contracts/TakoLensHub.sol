@@ -84,6 +84,7 @@ contract TakoLensHub is Ownable {
 
     constructor(address lensHub) {
         LENS_HUB = lensHub;
+        feeCollector = _msgSender();
     }
 
     receive() external payable {}
@@ -160,6 +161,9 @@ contract TakoLensHub is Ownable {
         DataTypes.EIP712Signature calldata sig
     ) external {
         Content memory content = _contentByIndex[index];
+        if (content.bidType != BidType.Post) {
+            revert Errors.ParamsrInvalid();
+        }
         _validateExpires(content.bidExpires);
         _validateProfile(profileId, content.toProfiles);
         ILensHub.PostWithSigData memory lensData;
@@ -182,6 +186,9 @@ contract TakoLensHub is Ownable {
         DataTypes.EIP712Signature calldata sig
     ) external {
         Content memory content = _contentByIndex[index];
+        if (content.bidType != BidType.Mirror) {
+            revert Errors.ParamsrInvalid();
+        }
         _validateExpires(content.bidExpires);
         _validateProfile(profileId, content.toProfiles);
         ILensHub.MirrorWithSigData memory lensData;
@@ -205,6 +212,9 @@ contract TakoLensHub is Ownable {
         DataTypes.EIP712Signature calldata sig
     ) external {
         Content memory content = _contentByIndex[index];
+        if (content.bidType != BidType.Comment) {
+            revert Errors.ParamsrInvalid();
+        }
         _validateExpires(content.bidExpires);
         _validateProfile(profileId, content.toProfiles);
         ILensHub.CommentWithSigData memory lensData;
