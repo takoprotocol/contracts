@@ -7,6 +7,7 @@ export const ERRORS = {
   WRONG_AMOUNT: 'WrongAmount',
   PARAMSR_INVALID: 'ParamsrInvalid',
   TO_PROFILE_LIMIT_EXCEEDED: 'ToProfileLimitExceeded',
+  BID_TYPE_NOT_ACCEPT: 'BidTypeNotAccept',
   NOT_REACHED_MINIMUM: 'NotReachedMinimum',
   INSUFFICIENT_BALANCE: 'InsufficientBalance',
   INSUFFICIENT_INPUT_AMOUNT: 'InsufficientInputAmount',

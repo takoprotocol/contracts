@@ -123,6 +123,18 @@ makeSuiteCleanRoom('TakoLensHub', () => {
         )
       ).to.revertedWith(ERRORS.BID_TOKEN_NOT_WHITELISTED);
     });
+    it('Should fail to bid if the bid type not allowed', async () => {
+      await expect(
+        takoLensHub
+          .connect(profileOwner)
+          .setDisableAuditTypes([true, false, false])
+      ).to.not.reverted;
+      await expect(
+        takoLensHub
+          .connect(user)
+          .bid(getBidBaseParams(), 0, { value: BID_AMOUNT })
+      ).to.revertedWith(ERRORS.BID_TYPE_NOT_ACCEPT);
+    });
     it('Should success to bid post', async () => {
       await expect(
         takoLensHub
@@ -155,8 +167,6 @@ makeSuiteCleanRoom('TakoLensHub', () => {
       await initBid();
     });
     it('Should fail to audit if the params', async () => {
-      const content = await takoLensHub.getContentByIndex(2);
-      console.log(content);
       await expect(
         takoLensHub.connect(profileOwner).auditBidPost(2, 1, getEmptySig())
       ).to.revertedWith(ERRORS.PARAMSR_INVALID);

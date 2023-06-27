@@ -12,6 +12,7 @@ library Errors {
     error ParamsrInvalid();
 
     error ToProfileLimitExceeded();
+    error BidTypeNotAccept();
     error NotReachedMinimum();
     error InsufficientBalance();
     error InsufficientInputAmount();

@@ -72,13 +72,14 @@ contract TakoLensHub is Ownable {
     address public feeCollector;
     uint256 public feeRate = 1 * 10 ** 8;
     uint256 _bidCounter;
+    mapping(uint256 => Content) internal _contentByIndex;
     mapping(address => bool) internal _bidTokenWhitelisted;
     mapping(address => mapping(address => uint256)) _minBidByTokenByWallet;
-    mapping(uint256 => Content) internal _contentByIndex;
+    mapping(address => mapping(BidType => bool)) _disableAuditType;
 
     uint256 _momokaBidCounter;
-    mapping(address => bool) internal _relayerWhitelisted;
     mapping(uint256 => MomokaContent) internal _momokaContentByIndex;
+    mapping(address => bool) internal _relayerWhitelisted;
 
     uint256 public constant FEE_DENOMINATOR = 10 ** 10;
 
@@ -121,10 +122,6 @@ contract TakoLensHub is Ownable {
     }
 
     // User
-    function setMinBid(address token, uint256 min) external {
-        _minBidByTokenByWallet[_msgSender()][token] = min;
-    }
-
     function bid(BidData calldata vars, BidType bidType) external payable {
         _bid(vars, bidType);
     }
@@ -155,6 +152,24 @@ contract TakoLensHub is Ownable {
     }
 
     // Curator
+
+    function settings(
+        address token,
+        uint256 min,
+        bool[] calldata disableAuditTypes
+    ) external {
+        _setMinBid(token, min);
+        _setDisableAuditTypes(disableAuditTypes);
+    }
+
+    function setMinBid(address token, uint256 min) external {
+        _setMinBid(token, min);
+    }
+
+    function setDisableAuditTypes(bool[] calldata disableAuditTypes) external {
+        _setDisableAuditTypes(disableAuditTypes);
+    }
+
     function auditBidPost(
         uint256 index,
         uint256 profileId,
@@ -288,6 +303,7 @@ contract TakoLensHub is Ownable {
         return _momokaBidCounter;
     }
 
+    // Private
     function _validateExpires(uint256 expires) internal view {
         if (expires < block.timestamp) {
             revert Errors.Expired();
@@ -303,6 +319,7 @@ contract TakoLensHub is Ownable {
     function _validateBidAndGetToken(
         address token,
         uint256 amount,
+        BidType bidType,
         uint256[] memory toProfiles
     ) internal {
         if (toProfiles.length > maxToProfileCounter) {
@@ -312,6 +329,9 @@ contract TakoLensHub is Ownable {
             address profileOwner = ILensHub(LENS_HUB).ownerOf(toProfiles[i]);
             if (_minBidByTokenByWallet[profileOwner][token] > amount) {
                 revert Errors.NotReachedMinimum();
+            }
+            if (_disableAuditType[profileOwner][bidType]) {
+                revert Errors.BidTypeNotAccept();
             }
         }
         if (token == address(0) && amount != msg.value) {
@@ -339,9 +359,25 @@ contract TakoLensHub is Ownable {
                 break;
             }
         }
+        if (toProfiles.length == 0) {
+            flag = true;
+        }
         if (!flag) {
             revert Errors.NotAuditor();
         }
+    }
+
+    function _setMinBid(address token, uint256 min) internal {
+        _minBidByTokenByWallet[_msgSender()][token] = min;
+    }
+
+    function _setDisableAuditTypes(bool[] calldata disableAuditTypes) internal {
+        if (disableAuditTypes.length != 3) {
+            revert Errors.ParamsrInvalid();
+        }
+        _disableAuditType[_msgSender()][BidType.Post] = disableAuditTypes[0];
+        _disableAuditType[_msgSender()][BidType.Comment] = disableAuditTypes[1];
+        _disableAuditType[_msgSender()][BidType.Mirror] = disableAuditTypes[2];
     }
 
     function _postWithSign(ILensHub.PostWithSigData memory vars) internal {
@@ -359,7 +395,12 @@ contract TakoLensHub is Ownable {
     }
 
     function _bid(BidData calldata vars, BidType bidType) internal {
-        _validateBidAndGetToken(vars.bidToken, vars.bidAmount, vars.toProfiles);
+        _validateBidAndGetToken(
+            vars.bidToken,
+            vars.bidAmount,
+            bidType,
+            vars.toProfiles
+        );
         uint256 counter = ++_bidCounter;
         Content memory content;
         content.contentURI = vars.contentURI;
@@ -379,7 +420,12 @@ contract TakoLensHub is Ownable {
     }
 
     function _bidMomoka(MomokaBidData calldata vars, BidType bidType) internal {
-        _validateBidAndGetToken(vars.bidToken, vars.bidAmount, vars.toProfiles);
+        _validateBidAndGetToken(
+            vars.bidToken,
+            vars.bidAmount,
+            bidType,
+            vars.toProfiles
+        );
         uint256 counter = ++_momokaBidCounter;
         MomokaContent memory content;
         content.bidAmount = vars.bidAmount;
