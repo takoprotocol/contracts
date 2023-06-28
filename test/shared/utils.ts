@@ -10,6 +10,9 @@ export enum AuditState {
   Cancel,
 }
 
+export const FAKE_PRIVATEKEY =
+  '0x01e4ed93ba50e2eb08ab5a6067916893eb95bee49d91791920eb3b3beb054262';
+
 export const ADDRESS_ZERO = ethers.constants.AddressZero;
 
 export async function EVMincreaseTime(time: number) {

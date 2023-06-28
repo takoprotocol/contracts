@@ -14,6 +14,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 contract TakoLensHub is Ownable {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
+
     address LENS_HUB;
 
     enum BidType {
@@ -67,7 +68,10 @@ contract TakoLensHub is Ownable {
         DataTypes.AuditState state;
         BidType bidType;
     }
-
+    bytes32 internal constant LOAN_WITH_SIG_TYPEHASH =
+        keccak256(
+            "LoanWithSig(uint256 index,address auditor,uint256 deadline)"
+        );
     uint8 public maxToProfileCounter = 5;
     address public feeCollector;
     uint256 public feeRate = 1 * 10 ** 8;
@@ -151,6 +155,41 @@ contract TakoLensHub is Ownable {
         }
     }
 
+    function cancelBid(uint256 index) external {
+        _validateContentIndex(index);
+        Content memory content = _contentByIndex[index];
+        if (content.bidAddress != _msgSender()) revert Errors.NotBidder();
+        if (content.bidExpires > block.timestamp) revert Errors.NotExpired();
+        if (content.state != DataTypes.AuditState.Pending)
+            revert Errors.BidIsClose();
+        if (content.bidAmount > 0) {
+            _sendTokenOrETH(
+                content.bidToken,
+                content.bidAddress,
+                content.bidAmount
+            );
+        }
+        _contentByIndex[index].state = DataTypes.AuditState.Cancel;
+    }
+
+    function cancelBidMomoka(uint256 index) external {
+        _validateMomokaContentIndex(index);
+        (index);
+        MomokaContent memory content = _momokaContentByIndex[index];
+        if (content.bidAddress != _msgSender()) revert Errors.NotBidder();
+        if (content.bidExpires > block.timestamp) revert Errors.NotExpired();
+        if (content.state != DataTypes.AuditState.Pending)
+            revert Errors.BidIsClose();
+        if (content.bidAmount > 0) {
+            _sendTokenOrETH(
+                content.bidToken,
+                content.bidAddress,
+                content.bidAmount
+            );
+        }
+        _momokaContentByIndex[index].state = DataTypes.AuditState.Cancel;
+    }
+
     // Curator
 
     function settings(
@@ -175,9 +214,13 @@ contract TakoLensHub is Ownable {
         uint256 profileId,
         DataTypes.EIP712Signature calldata sig
     ) external {
+        _validateContentIndex(index);
         Content memory content = _contentByIndex[index];
         if (content.bidType != BidType.Post) {
             revert Errors.ParamsrInvalid();
+        }
+        if (content.state != DataTypes.AuditState.Pending) {
+            revert Errors.BidIsClose();
         }
         _validateExpires(content.bidExpires);
         _validateProfile(profileId, content.toProfiles);
@@ -200,9 +243,13 @@ contract TakoLensHub is Ownable {
         uint256 profileId,
         DataTypes.EIP712Signature calldata sig
     ) external {
+        _validateContentIndex(index);
         Content memory content = _contentByIndex[index];
         if (content.bidType != BidType.Mirror) {
             revert Errors.ParamsrInvalid();
+        }
+        if (content.state != DataTypes.AuditState.Pending) {
+            revert Errors.BidIsClose();
         }
         _validateExpires(content.bidExpires);
         _validateProfile(profileId, content.toProfiles);
@@ -226,9 +273,13 @@ contract TakoLensHub is Ownable {
         uint256 profileId,
         DataTypes.EIP712Signature calldata sig
     ) external {
+        _validateContentIndex(index);
         Content memory content = _contentByIndex[index];
         if (content.bidType != BidType.Comment) {
             revert Errors.ParamsrInvalid();
+        }
+        if (content.state != DataTypes.AuditState.Pending) {
+            revert Errors.BidIsClose();
         }
         _validateExpires(content.bidExpires);
         _validateProfile(profileId, content.toProfiles);
@@ -253,22 +304,32 @@ contract TakoLensHub is Ownable {
         address relayer,
         DataTypes.EIP712Signature calldata sig
     ) external {
+        _validateMomokaContentIndex(index);
         if (!_relayerWhitelisted[relayer]) {
             revert Errors.NotWhitelisted();
         }
         MomokaContent memory content = _momokaContentByIndex[index];
-        _validateExpires(content.bidExpires);
+        if (content.state != DataTypes.AuditState.Pending) {
+            revert Errors.BidIsClose();
+        }
         _validateProfile(profileId, content.toProfiles);
         SigUtils._validateRecoveredAddress(
             SigUtils._calculateDigest(
-                keccak256(abi.encode(index, _msgSender(), sig.deadline)),
-                "TakoLensHub"
+                keccak256(
+                    abi.encode(
+                        LOAN_WITH_SIG_TYPEHASH,
+                        index,
+                        _msgSender(),
+                        sig.deadline
+                    )
+                ),
+                "Tako Lens Hub"
             ),
             relayer,
             sig
         );
         _loan(content.bidToken, content.bidAmount);
-        _contentByIndex[index].state = DataTypes.AuditState.Pass;
+        _momokaContentByIndex[index].state = DataTypes.AuditState.Pass;
     }
 
     // View
@@ -312,6 +373,12 @@ contract TakoLensHub is Ownable {
 
     function _validateContentIndex(uint256 index) internal view {
         if (index > _bidCounter) {
+            revert Errors.ParamsrInvalid();
+        }
+    }
+
+    function _validateMomokaContentIndex(uint256 index) internal view {
+        if (index > _momokaBidCounter) {
             revert Errors.ParamsrInvalid();
         }
     }

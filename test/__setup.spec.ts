@@ -1,14 +1,19 @@
 import { use } from 'chai';
-import { BaseContract, Signer } from 'ethers';
-import hre from 'hardhat';
+import { BaseContract, Signer, Wallet } from 'ethers';
+import hre, { ethers } from 'hardhat';
 import { solidity } from 'ethereum-waffle';
-import { revertToSnapshot, takeSnapshot } from './shared/utils';
+import {
+  FAKE_PRIVATEKEY,
+  revertToSnapshot,
+  takeSnapshot,
+} from './shared/utils';
 import { TakoLensHub, TakoToken } from '../typechain-types';
 import { FakeContract, smock } from '@defi-wonderland/smock';
 import { LensHubAbi } from './shared/abis';
 
 use(solidity);
 
+export let testWallet: Wallet;
 export let accounts: Signer[];
 export let deployer: Signer;
 export let user: Signer;
@@ -38,6 +43,8 @@ before(async () => {
 });
 
 async function initAccount() {
+  testWallet = new ethers.Wallet(FAKE_PRIVATEKEY).connect(ethers.provider);
+
   accounts = await hre.ethers.getSigners();
   deployer = accounts[0];
   relayer = accounts[1];

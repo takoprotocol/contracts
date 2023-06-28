@@ -10,6 +10,7 @@ library Errors {
     error Expired();
     error WrongAmount();
     error ParamsrInvalid();
+    error NotExpired();
 
     error ToProfileLimitExceeded();
     error BidTypeNotAccept();
