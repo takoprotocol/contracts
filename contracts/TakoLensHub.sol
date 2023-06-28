@@ -156,6 +156,32 @@ contract TakoLensHub is Ownable {
         }
     }
 
+    function updateBid(
+        uint256 index,
+        uint256 duration,
+        uint256 amount
+    ) external {
+        _validateContentIndex(index);
+        Content memory content = _contentByIndex[index];
+        _getBidToken(content.bidToken, amount);
+        content.bidAmount += amount;
+        content.bidExpires += duration;
+        _contentByIndex[index] = content;
+    }
+
+    function updateBidMomoka(
+        uint256 index,
+        uint256 duration,
+        uint256 amount
+    ) external {
+        _validateMomokaContentIndex(index);
+        MomokaContent memory content = _momokaContentByIndex[index];
+        _getBidToken(content.bidToken, amount);
+        content.bidAmount += amount;
+        content.bidExpires += duration;
+        _momokaContentByIndex[index] = content;
+    }
+
     function cancelBid(uint256 index) external {
         _cancelBid(index);
     }
@@ -386,14 +412,7 @@ contract TakoLensHub is Ownable {
                 revert Errors.BidTypeNotAccept();
             }
         }
-        if (token == address(0) && amount != msg.value) {
-            revert Errors.InsufficientInputAmount();
-        }
-        if (token != address(0)) {
-            if (!_bidTokenWhitelisted[token])
-                revert Errors.BidTokenNotWhitelisted();
-            IERC20(token).safeTransferFrom(_msgSender(), address(this), amount);
-        }
+        _getBidToken(token, amount);
     }
 
     function _validateProfile(
@@ -540,6 +559,17 @@ contract TakoLensHub is Ownable {
         uint256 feeAmount = amount.mul(feeRate).div(FEE_DENOMINATOR);
         _sendTokenOrETH(token, feeCollector, feeAmount);
         _sendTokenOrETH(token, _msgSender(), amount.sub(feeAmount));
+    }
+
+    function _getBidToken(address token, uint256 amount) internal {
+        if (token == address(0) && amount != msg.value) {
+            revert Errors.InsufficientInputAmount();
+        }
+        if (token != address(0)) {
+            if (!_bidTokenWhitelisted[token])
+                revert Errors.BidTokenNotWhitelisted();
+            IERC20(token).safeTransferFrom(_msgSender(), address(this), amount);
+        }
     }
 
     function _sendTokenOrETH(
