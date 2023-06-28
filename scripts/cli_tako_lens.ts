@@ -14,7 +14,7 @@ const lensHub: { [key: string]: string } = {
 };
 
 const deployed: { [key: string]: string } = {
-  [CHAIN.PolygonTestNet]: '0x152886257Dbe903059EffAB1742a55002D0ce963',
+  [CHAIN.PolygonTestNet]: '0x8b54AB63D420d9689BCb3cc7517F0034868c2C1F',
 };
 
 async function main() {

@@ -42,6 +42,8 @@ contract TakoLensHub is Ownable {
         uint256 bidAmount;
         uint256 bidExpires;
         uint256[] toProfiles;
+        uint256 curatorProfileId;
+        uint256 curatorPubId;
         DataTypes.AuditState state;
         BidType bidType;
     }
@@ -65,13 +67,15 @@ contract TakoLensHub is Ownable {
         uint256 bidAmount;
         uint256 bidExpires;
         uint256[] toProfiles;
+        uint256 curatorProfileId;
+        string curatorPubId;
         DataTypes.AuditState state;
         BidType bidType;
     }
     string public constant name = "Tako Lens Hub";
     bytes32 internal constant LOAN_WITH_SIG_TYPEHASH =
         keccak256(
-            "LoanWithSig(uint256 index,address auditor,uint256 deadline)"
+            "LoanWithSig(uint256 index,address auditor,string contentId,uint256 deadline)"
         );
     uint8 public maxToProfileCounter = 5;
     address public feeCollector;
@@ -249,7 +253,8 @@ contract TakoLensHub is Ownable {
             sig.s,
             sig.deadline
         );
-        _postWithSign(lensData);
+        content.curatorPubId = _postWithSign(lensData);
+        content.curatorProfileId = profileId;
         _loan(content.bidToken, content.bidAmount);
         _contentByIndex[index].state = DataTypes.AuditState.Pass;
         emit modifiBidEvent(content);
@@ -280,7 +285,9 @@ contract TakoLensHub is Ownable {
             sig.s,
             sig.deadline
         );
-        _mirrorWithSign(lensData);
+
+        content.curatorPubId = _mirrorWithSign(lensData);
+        content.curatorProfileId = profileId;
         _loan(content.bidToken, content.bidAmount);
         _contentByIndex[index].state = DataTypes.AuditState.Pass;
         emit modifiBidEvent(_contentByIndex[index]);
@@ -311,7 +318,8 @@ contract TakoLensHub is Ownable {
             sig.s,
             sig.deadline
         );
-        _commentWithSign(lensData);
+        content.curatorPubId = _commentWithSign(lensData);
+        content.curatorProfileId = profileId;
         _loan(content.bidToken, content.bidAmount);
         _contentByIndex[index].state = DataTypes.AuditState.Pass;
         emit modifiBidEvent(_contentByIndex[index]);
@@ -321,6 +329,7 @@ contract TakoLensHub is Ownable {
         uint256 index,
         uint256 profileId,
         address relayer,
+        string calldata contentId,
         DataTypes.EIP712Signature calldata sig
     ) external {
         _validateMomokaContentIndex(index);
@@ -339,6 +348,7 @@ contract TakoLensHub is Ownable {
                         LOAN_WITH_SIG_TYPEHASH,
                         index,
                         _msgSender(),
+                        keccak256(bytes(contentId)),
                         sig.deadline
                     )
                 ),
@@ -349,6 +359,8 @@ contract TakoLensHub is Ownable {
         );
         _loan(content.bidToken, content.bidAmount);
         _momokaContentByIndex[index].state = DataTypes.AuditState.Pass;
+        _momokaContentByIndex[index].curatorProfileId = profileId;
+        _momokaContentByIndex[index].curatorPubId = contentId;
         emit modifiBidMomokaEvnet(_momokaContentByIndex[index]);
     }
 
@@ -467,18 +479,22 @@ contract TakoLensHub is Ownable {
         _disableAuditType[_msgSender()][BidType.Mirror] = disableAuditTypes[2];
     }
 
-    function _postWithSign(ILensHub.PostWithSigData memory vars) internal {
-        ILensHub(LENS_HUB).postWithSig(vars);
+    function _postWithSign(
+        ILensHub.PostWithSigData memory vars
+    ) internal returns (uint256) {
+        return ILensHub(LENS_HUB).postWithSig(vars);
     }
 
-    function _mirrorWithSign(ILensHub.MirrorWithSigData memory vars) internal {
-        ILensHub(LENS_HUB).mirrorWithSig(vars);
+    function _mirrorWithSign(
+        ILensHub.MirrorWithSigData memory vars
+    ) internal returns (uint256) {
+        return ILensHub(LENS_HUB).mirrorWithSig(vars);
     }
 
     function _commentWithSign(
         ILensHub.CommentWithSigData memory vars
-    ) internal {
-        ILensHub(LENS_HUB).commentWithSig((vars));
+    ) internal returns (uint256) {
+        return ILensHub(LENS_HUB).commentWithSig((vars));
     }
 
     function _bid(BidData calldata vars, BidType bidType) internal {

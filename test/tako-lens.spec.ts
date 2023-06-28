@@ -22,6 +22,7 @@ let officialFeeRate = 0;
 let profileOwner = users[0];
 let profileOwner1 = users[1];
 let relayer = testWallet;
+const contentId = '0x01-01';
 
 makeSuiteCleanRoom('TakoLensHub', () => {
   context('Gov', () => {
@@ -382,13 +383,19 @@ makeSuiteCleanRoom('TakoLensHub', () => {
       const { v, r, s } = await getLoanWithSigParts(
         1,
         await profileOwner.getAddress(),
+        contentId,
         deadline,
         takoLensHub.address
       );
       await expect(
         takoLensHub
           .connect(profileOwner)
-          .loanWithSig(1, 1, testWallet.address, { v, r, s, deadline })
+          .loanWithSig(1, 1, testWallet.address, contentId, {
+            v,
+            r,
+            s,
+            deadline,
+          })
       ).to.not.reverted;
       await EVMincreaseTime(DAY * 2);
       await EVMMine();
@@ -431,6 +438,7 @@ makeSuiteCleanRoom('TakoLensHub', () => {
       } = await getLoanWithSigParts(
         1,
         await profileOwner.getAddress(),
+        contentId,
         deadline,
         takoLensHub.address
       ));
@@ -439,7 +447,7 @@ makeSuiteCleanRoom('TakoLensHub', () => {
       await expect(
         takoLensHub
           .connect(profileOwner)
-          .loanWithSig(10, 1, relayer.address, { v, r, s, deadline })
+          .loanWithSig(10, 1, relayer.address, contentId, { v, r, s, deadline })
       ).to.revertedWith(ERRORS.PARAMSR_INVALID);
     });
     it('Should fail to loan if the bid is close', async () => {
@@ -450,21 +458,21 @@ makeSuiteCleanRoom('TakoLensHub', () => {
       await expect(
         takoLensHub
           .connect(profileOwner)
-          .loanWithSig(1, 1, relayer.address, { v, r, s, deadline })
+          .loanWithSig(1, 1, relayer.address, contentId, { v, r, s, deadline })
       ).to.revertedWith(ERRORS.BID_IS_CLOSE);
     });
     it('Should fail to loan if the profile error', async () => {
       await expect(
         takoLensHub
           .connect(profileOwner1)
-          .loanWithSig(1, 1, relayer.address, { v, r, s, deadline })
+          .loanWithSig(1, 1, relayer.address, contentId, { v, r, s, deadline })
       ).to.revertedWith(ERRORS.NOT_PROFILE_OWNER);
     });
     it('Should fail to loan if the sig error', async () => {
       await expect(
         takoLensHub
           .connect(profileOwner1)
-          .loanWithSig(1, 1, await profileOwner.getAddress(), {
+          .loanWithSig(1, 1, await profileOwner.getAddress(), contentId, {
             v,
             r,
             s,
@@ -475,12 +483,14 @@ makeSuiteCleanRoom('TakoLensHub', () => {
     it('Should success to loan with sig', async () => {
       const officialFee = (BID_AMOUNT * officialFeeRate) / FEE_DENOMINATOR;
       await expect(
-        takoLensHub.connect(profileOwner).loanWithSig(1, 1, relayer.address, {
-          v,
-          r,
-          s,
-          deadline,
-        })
+        takoLensHub
+          .connect(profileOwner)
+          .loanWithSig(1, 1, relayer.address, contentId, {
+            v,
+            r,
+            s,
+            deadline,
+          })
       ).to.changeEtherBalances(
         [deployer, profileOwner, takoLensHub],
         [officialFee, BID_AMOUNT - officialFee, -BID_AMOUNT]

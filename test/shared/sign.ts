@@ -4,6 +4,7 @@ import hre from 'hardhat';
 export async function getLoanWithSigParts(
   index: number,
   auditor: string,
+  contentId: string,
   deadline: number,
   verifyingContract: string
 ) {
@@ -12,6 +13,7 @@ export async function getLoanWithSigParts(
       LoanWithSig: [
         { name: 'index', type: 'uint256' },
         { name: 'auditor', type: 'address' },
+        { name: 'contentId', type: 'string' },
         { name: 'deadline', type: 'uint256' },
       ],
     },
@@ -19,6 +21,7 @@ export async function getLoanWithSigParts(
     value: {
       index,
       auditor,
+      contentId,
       deadline,
     },
   };
