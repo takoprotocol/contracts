@@ -88,6 +88,11 @@ contract TakoLensHub is Ownable {
 
     uint256 public constant FEE_DENOMINATOR = 10 ** 10;
 
+    event addBidEvent(Content content);
+    event modifiBidEvent(Content content);
+    event addBidMomokaEvent(MomokaContent content);
+    event modifiBidMomokaEvnet(MomokaContent content);
+
     constructor(address lensHub) {
         LENS_HUB = lensHub;
         feeCollector = _msgSender();
@@ -247,6 +252,7 @@ contract TakoLensHub is Ownable {
         _postWithSign(lensData);
         _loan(content.bidToken, content.bidAmount);
         _contentByIndex[index].state = DataTypes.AuditState.Pass;
+        emit modifiBidEvent(content);
     }
 
     function auditBidMirror(
@@ -277,6 +283,7 @@ contract TakoLensHub is Ownable {
         _mirrorWithSign(lensData);
         _loan(content.bidToken, content.bidAmount);
         _contentByIndex[index].state = DataTypes.AuditState.Pass;
+        emit modifiBidEvent(_contentByIndex[index]);
     }
 
     function auditBidComment(
@@ -307,6 +314,7 @@ contract TakoLensHub is Ownable {
         _commentWithSign(lensData);
         _loan(content.bidToken, content.bidAmount);
         _contentByIndex[index].state = DataTypes.AuditState.Pass;
+        emit modifiBidEvent(_contentByIndex[index]);
     }
 
     function loanWithSig(
@@ -341,6 +349,7 @@ contract TakoLensHub is Ownable {
         );
         _loan(content.bidToken, content.bidAmount);
         _momokaContentByIndex[index].state = DataTypes.AuditState.Pass;
+        emit modifiBidMomokaEvnet(_momokaContentByIndex[index]);
     }
 
     // View
@@ -349,6 +358,13 @@ contract TakoLensHub is Ownable {
         address token
     ) external view returns (uint256) {
         return _minBidByTokenByWallet[wallet][token];
+    }
+
+    function getDisableAcceptType(
+        address wallet,
+        BidType bidType
+    ) external view returns (bool) {
+        return _disableAuditType[wallet][bidType];
     }
 
     function isBidTokenWhitelisted(address token) external view returns (bool) {
@@ -488,6 +504,7 @@ contract TakoLensHub is Ownable {
         }
         content.state = DataTypes.AuditState.Pending;
         _contentByIndex[counter] = content;
+        emit addBidEvent((content));
     }
 
     function _bidMomoka(MomokaBidData calldata vars, BidType bidType) internal {
@@ -518,6 +535,7 @@ contract TakoLensHub is Ownable {
         }
         content.state = DataTypes.AuditState.Pending;
         _momokaContentByIndex[counter] = content;
+        emit addBidMomokaEvent(content);
     }
 
     function _cancelBid(uint256 index) internal {
@@ -535,6 +553,7 @@ contract TakoLensHub is Ownable {
             );
         }
         _contentByIndex[index].state = DataTypes.AuditState.Cancel;
+        emit modifiBidEvent(_contentByIndex[index]);
     }
 
     function _cancelBidMomoka(uint256 index) internal {
@@ -553,6 +572,7 @@ contract TakoLensHub is Ownable {
             );
         }
         _momokaContentByIndex[index].state = DataTypes.AuditState.Cancel;
+        emit modifiBidMomokaEvnet(_momokaContentByIndex[index]);
     }
 
     function _loan(address token, uint256 amount) internal {

@@ -32,6 +32,7 @@
     "test": "npm run compile && TRACK_GAS=true REPORT_GAS=true hardhat test",
     "quick-test": "REPORT_GAS=true hardhat test",
     "run:takoLens": "npx hardhat run scripts/cli_tako_lens.ts",
+    "run-mumbai:takoLens": "npx hardhat run scripts/cli_tako_lens.ts --network PolygonTestNet",
     "run:lens": "npx hardhat run scripts/lens.ts"
   }
 }

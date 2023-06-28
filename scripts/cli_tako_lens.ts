@@ -14,7 +14,7 @@ const lensHub: { [key: string]: string } = {
 };
 
 const deployed: { [key: string]: string } = {
-  [CHAIN.PolygonTestNet]: '0x53c2ECA15ca7c4302925e0FD97526AEf66C31E7F',
+  [CHAIN.PolygonTestNet]: '0x152886257Dbe903059EffAB1742a55002D0ce963',
 };
 
 async function main() {
@@ -73,23 +73,9 @@ async function mirrorWithSig(profileIdPointed: number, pubIdPointed: number) {
     hre.ethers.constants.AddressZero,
     [],
     nonce,
-    hre.ethers.constants.MaxUint256.toHexString()
+    1800000000
   );
-  const tx = await global.takoLensHub.mirrorWithSign({
-    profileId: testProfile,
-    profileIdPointed: profileIdPointed,
-    pubIdPointed: pubIdPointed,
-    referenceModuleData: [],
-    referenceModule: hre.ethers.constants.AddressZero,
-    referenceModuleInitData: [],
-    sig: {
-      v,
-      r,
-      s,
-      deadline: hre.ethers.constants.MaxUint256.toHexString(),
-    },
-  });
-  console.log(tx);
+  console.log(v, r, s);
 }
 
 async function getMirrorWithSigParts(
@@ -100,7 +86,7 @@ async function getMirrorWithSigParts(
   referenceModule: string,
   referenceModuleInitData: Bytes,
   nonce: number,
-  deadline: string
+  deadline: number
 ) {
   const msgParams = {
     types: {
