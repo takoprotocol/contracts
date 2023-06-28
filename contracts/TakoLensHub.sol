@@ -68,6 +68,7 @@ contract TakoLensHub is Ownable {
         DataTypes.AuditState state;
         BidType bidType;
     }
+    string public constant name = "Tako Lens Hub";
     bytes32 internal constant LOAN_WITH_SIG_TYPEHASH =
         keccak256(
             "LoanWithSig(uint256 index,address auditor,uint256 deadline)"
@@ -132,10 +133,10 @@ contract TakoLensHub is Ownable {
 
     function bidArray(
         BidData[] calldata vars,
-        BidType bidType
+        BidType[] calldata bidType
     ) external payable {
         for (uint256 i = 0; i < vars.length; i++) {
-            _bid(vars[i], bidType);
+            _bid(vars[i], bidType[i]);
         }
     }
 
@@ -148,50 +149,34 @@ contract TakoLensHub is Ownable {
 
     function bidMomokaArray(
         MomokaBidData[] calldata vars,
-        BidType bidType
+        BidType[] calldata bidType
     ) external payable {
         for (uint256 i = 0; i < vars.length; i++) {
-            _bidMomoka(vars[i], bidType);
+            _bidMomoka(vars[i], bidType[i]);
         }
     }
 
     function cancelBid(uint256 index) external {
-        _validateContentIndex(index);
-        Content memory content = _contentByIndex[index];
-        if (content.bidAddress != _msgSender()) revert Errors.NotBidder();
-        if (content.bidExpires > block.timestamp) revert Errors.NotExpired();
-        if (content.state != DataTypes.AuditState.Pending)
-            revert Errors.BidIsClose();
-        if (content.bidAmount > 0) {
-            _sendTokenOrETH(
-                content.bidToken,
-                content.bidAddress,
-                content.bidAmount
-            );
+        _cancelBid(index);
+    }
+
+    function cancelBidArray(uint256[] calldata indexArr) external {
+        for (uint256 i = 0; i < indexArr.length; i++) {
+            _cancelBid(indexArr[i]);
         }
-        _contentByIndex[index].state = DataTypes.AuditState.Cancel;
     }
 
     function cancelBidMomoka(uint256 index) external {
-        _validateMomokaContentIndex(index);
-        (index);
-        MomokaContent memory content = _momokaContentByIndex[index];
-        if (content.bidAddress != _msgSender()) revert Errors.NotBidder();
-        if (content.bidExpires > block.timestamp) revert Errors.NotExpired();
-        if (content.state != DataTypes.AuditState.Pending)
-            revert Errors.BidIsClose();
-        if (content.bidAmount > 0) {
-            _sendTokenOrETH(
-                content.bidToken,
-                content.bidAddress,
-                content.bidAmount
-            );
+        _cancelBidMomoka(index);
+    }
+
+    function cancelBidMomokaArray(uint256[] calldata indexArr) external {
+        for (uint256 i = 0; i < indexArr.length; i++) {
+            _cancelBidMomoka(indexArr[i]);
         }
-        _momokaContentByIndex[index].state = DataTypes.AuditState.Cancel;
     }
 
     // Curator
-
     function settings(
         address token,
         uint256 min,
@@ -323,7 +308,7 @@ contract TakoLensHub is Ownable {
                         sig.deadline
                     )
                 ),
-                "Tako Lens Hub"
+                name
             ),
             relayer,
             sig
@@ -514,6 +499,41 @@ contract TakoLensHub is Ownable {
         }
         content.state = DataTypes.AuditState.Pending;
         _momokaContentByIndex[counter] = content;
+    }
+
+    function _cancelBid(uint256 index) internal {
+        _validateContentIndex(index);
+        Content memory content = _contentByIndex[index];
+        if (content.bidAddress != _msgSender()) revert Errors.NotBidder();
+        if (content.bidExpires > block.timestamp) revert Errors.NotExpired();
+        if (content.state != DataTypes.AuditState.Pending)
+            revert Errors.BidIsClose();
+        if (content.bidAmount > 0) {
+            _sendTokenOrETH(
+                content.bidToken,
+                content.bidAddress,
+                content.bidAmount
+            );
+        }
+        _contentByIndex[index].state = DataTypes.AuditState.Cancel;
+    }
+
+    function _cancelBidMomoka(uint256 index) internal {
+        _validateMomokaContentIndex(index);
+        (index);
+        MomokaContent memory content = _momokaContentByIndex[index];
+        if (content.bidAddress != _msgSender()) revert Errors.NotBidder();
+        if (content.bidExpires > block.timestamp) revert Errors.NotExpired();
+        if (content.state != DataTypes.AuditState.Pending)
+            revert Errors.BidIsClose();
+        if (content.bidAmount > 0) {
+            _sendTokenOrETH(
+                content.bidToken,
+                content.bidAddress,
+                content.bidAmount
+            );
+        }
+        _momokaContentByIndex[index].state = DataTypes.AuditState.Cancel;
     }
 
     function _loan(address token, uint256 amount) internal {

@@ -6,6 +6,7 @@ export const ERRORS = {
   EXPIRED: 'Expired',
   WRONG_AMOUNT: 'WrongAmount',
   PARAMSR_INVALID: 'ParamsrInvalid',
+  NOT_EXPIRED: 'NotExpired',
   TO_PROFILE_LIMIT_EXCEEDED: 'ToProfileLimitExceeded',
   BID_TYPE_NOT_ACCEPT: 'BidTypeNotAccept',
   NOT_REACHED_MINIMUM: 'NotReachedMinimum',
