@@ -268,3 +268,5 @@ export const LensHubAbi = [
     type: 'function',
   },
 ];
+
+export const lensFreeCollectModuleAbi = [];

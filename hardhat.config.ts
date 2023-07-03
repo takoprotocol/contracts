@@ -38,7 +38,7 @@ const config: HardhatUserConfig = {
     },
     [CHAIN.PolygonTestNet]: {
       chainId: 80001,
-      url: 'https://matic-mumbai.chainstacklabs.com',
+      url: 'https://rpc-mumbai.maticvigil.com',
       accounts: [privateKey],
       gas: 'auto',
       gasPrice: 'auto',

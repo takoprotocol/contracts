@@ -11,7 +11,12 @@ import {
   users,
 } from './__setup.spec';
 import { ERRORS } from './helpers/errors';
-import { ADDRESS_ZERO, EVMMine, EVMincreaseTime } from './shared/utils';
+import {
+  ADDRESS_ZERO,
+  AuditState,
+  EVMMine,
+  EVMincreaseTime,
+} from './shared/utils';
 import { ethers } from 'hardhat';
 import { getLoanWithSigParts } from './shared/sign';
 
@@ -246,6 +251,9 @@ makeSuiteCleanRoom('TakoLensHub', () => {
         [deployer, profileOwner, takoLensHub],
         [officialFee, BID_AMOUNT - officialFee, -BID_AMOUNT]
       );
+      expect((await takoLensHub.getContentByIndex(1)).state).to.eq(
+        AuditState.Pass
+      );
     });
     it('Should success to audit comment', async () => {
       const officialFee = (BID_AMOUNT * officialFeeRate) / FEE_DENOMINATOR;
@@ -255,6 +263,9 @@ makeSuiteCleanRoom('TakoLensHub', () => {
         [deployer, profileOwner, takoLensHub],
         [officialFee, BID_AMOUNT - officialFee, -BID_AMOUNT]
       );
+      expect((await takoLensHub.getContentByIndex(2)).state).to.eq(
+        AuditState.Pass
+      );
     });
     it('Should success to audit mirror', async () => {
       const officialFee = (BID_AMOUNT * officialFeeRate) / FEE_DENOMINATOR;
@@ -263,6 +274,9 @@ makeSuiteCleanRoom('TakoLensHub', () => {
       ).changeEtherBalances(
         [deployer, profileOwner, takoLensHub],
         [officialFee, BID_AMOUNT - officialFee, -BID_AMOUNT]
+      );
+      expect((await takoLensHub.getContentByIndex(3)).state).to.eq(
+        AuditState.Pass
       );
     });
   });
@@ -494,6 +508,9 @@ makeSuiteCleanRoom('TakoLensHub', () => {
       ).to.changeEtherBalances(
         [deployer, profileOwner, takoLensHub],
         [officialFee, BID_AMOUNT - officialFee, -BID_AMOUNT]
+      );
+      expect((await takoLensHub.getMomokaContentByIndex(1)).state).to.eq(
+        AuditState.Pass
       );
     });
   });

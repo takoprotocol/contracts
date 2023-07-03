@@ -9,7 +9,7 @@ import {
 } from './shared/utils';
 import { TakoLensHub, TakoToken } from '../typechain-types';
 import { FakeContract, smock } from '@defi-wonderland/smock';
-import { LensHubAbi } from './shared/abis';
+import { LensHubAbi, lensFreeCollectModuleAbi } from './shared/abis';
 
 use(solidity);
 
@@ -22,6 +22,7 @@ export const users: Signer[] = [];
 export let relayer: Signer;
 
 export let lensHubMock: FakeContract<BaseContract>;
+export let lensFreeCollectModule: FakeContract<BaseContract>;
 export let takoLensHub: TakoLensHub;
 export let takoToken: TakoToken;
 
@@ -44,7 +45,6 @@ before(async () => {
 
 async function initAccount() {
   testWallet = new ethers.Wallet(FAKE_PRIVATEKEY).connect(ethers.provider);
-
   accounts = await hre.ethers.getSigners();
   deployer = accounts[0];
   relayer = accounts[1];
@@ -62,7 +62,7 @@ async function initContract() {
 
   takoLensHub = (await takoLensHubFactory
     .connect(deployer)
-    .deploy(lensHubMock.address)) as TakoLensHub;
+    .deploy(lensHubMock.address, lensFreeCollectModule.address)) as TakoLensHub;
   takoToken = (await takoTokenFactory.connect(deployer).deploy()) as TakoToken;
 }
 
@@ -70,6 +70,7 @@ async function initLensHubMock() {
   const profileOwner = await users[0].getAddress();
   const profileOwner1 = await users[1].getAddress();
   lensHubMock = await smock.fake(LensHubAbi);
+  lensFreeCollectModule = await smock.fake(lensFreeCollectModuleAbi);
   lensHubMock.mirrorWithSig.returns(1);
   lensHubMock.postWithSig.returns(1);
   lensHubMock.commentWithSig.returns(1);

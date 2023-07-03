@@ -13,6 +13,7 @@ library Errors {
     error NotExpired();
 
     error ToProfileLimitExceeded();
+    error DurationLimitExceeded();
     error BidTypeNotAccept();
     error NotReachedMinimum();
     error InsufficientBalance();
