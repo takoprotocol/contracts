@@ -8,6 +8,7 @@ export const ERRORS = {
   PARAMSR_INVALID: 'ParamsrInvalid',
   NOT_EXPIRED: 'NotExpired',
   TO_PROFILE_LIMIT_EXCEEDED: 'ToProfileLimitExceeded',
+  DURATION_LIMIT_EXCEEDED: 'DurationLimitExceeded',
   BID_TYPE_NOT_ACCEPT: 'BidTypeNotAccept',
   NOT_REACHED_MINIMUM: 'NotReachedMinimum',
   INSUFFICIENT_BALANCE: 'InsufficientBalance',

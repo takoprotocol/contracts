@@ -91,6 +91,23 @@ makeSuiteCleanRoom('TakoLensHub', () => {
     beforeEach(async () => {
       await init();
     });
+    it('Should fail to bid if the duration limit exceeded', async () => {
+      const maxDuration = (await takoLensHub.maxDuration()).toNumber();
+      await expect(
+        takoLensHub.connect(user).bid(
+          {
+            contentURI: '',
+            profileIdPointed: 1,
+            pubIdPointed: 1,
+            bidToken: ADDRESS_ZERO,
+            bidAmount: BID_AMOUNT,
+            duration: DAY * maxDuration + DAY,
+            toProfiles: [1],
+          },
+          0
+        )
+      ).to.revertedWith(ERRORS.DURATION_LIMIT_EXCEEDED);
+    });
     it('Should fail to bid if the toprofile limit exceeded', async () => {
       const toProfiles = [];
       for (let i = 0; i < 10; i++) {
@@ -284,6 +301,23 @@ makeSuiteCleanRoom('TakoLensHub', () => {
   context('User bid momoka', () => {
     beforeEach(async () => {
       await init();
+    });
+    it('Should fail to bid if the duration limit exceeded', async () => {
+      const maxDuration = (await takoLensHub.maxDuration()).toNumber();
+      await expect(
+        takoLensHub.connect(user).bidMomoka(
+          {
+            contentURI: '',
+            mirror: '',
+            commentOn: '',
+            bidToken: ADDRESS_ZERO,
+            bidAmount: BID_AMOUNT,
+            duration: DAY * maxDuration + DAY,
+            toProfiles: [1],
+          },
+          0
+        )
+      ).to.revertedWith(ERRORS.DURATION_LIMIT_EXCEEDED);
     });
     it('Should fail to bid if the toprofile limit exceeded', async () => {
       const toProfiles = [];
