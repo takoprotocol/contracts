@@ -182,7 +182,7 @@ contract TakoLensHub is Ownable {
         uint256 index,
         uint256 duration,
         uint256 amount
-    ) external {
+    ) external payable {
         _validateDuration(duration);
         _validateContentIndex(index);
         Content memory content = _contentByIndex[index];
@@ -196,7 +196,7 @@ contract TakoLensHub is Ownable {
         uint256 index,
         uint256 duration,
         uint256 amount
-    ) external {
+    ) external payable {
         _validateDuration(duration);
         _validateMomokaContentIndex(index);
         MomokaContent memory content = _momokaContentByIndex[index];
