@@ -8,12 +8,10 @@ import "./libraries/Errors.sol";
 import "./interfaces/ILensHub.sol";
 import "./libraries/SigUtils.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract TakoLensHub is Ownable {
     using SafeERC20 for IERC20;
-    using SafeMath for uint256;
 
     address LENS_HUB;
     address LENS_FREE_COLLECT_MODULE;
@@ -621,9 +619,9 @@ contract TakoLensHub is Ownable {
     }
 
     function _loan(address token, uint256 amount) internal {
-        uint256 feeAmount = amount.mul(feeRate).div(FEE_DENOMINATOR);
+        uint256 feeAmount = amount * feeRate / FEE_DENOMINATOR;
         _sendTokenOrETH(token, feeCollector, feeAmount);
-        _sendTokenOrETH(token, _msgSender(), amount.sub(feeAmount));
+        _sendTokenOrETH(token, _msgSender(), amount - feeAmount);
     }
 
     function _getBidToken(address token, uint256 amount) internal {
