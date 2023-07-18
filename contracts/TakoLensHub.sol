@@ -263,7 +263,7 @@ contract TakoLensHub is Ownable {
         lensData.profileId = profileId;
         lensData.contentURI = content.contentURI;
         lensData.collectModule = LENS_FREE_COLLECT_MODULE;
-        lensData.collectModuleInitData = abi.encode(true);
+        lensData.collectModuleInitData = abi.encode(false);
         lensData.sig = DataTypes.EIP712Signature(
             sig.v,
             sig.r,
@@ -332,7 +332,7 @@ contract TakoLensHub is Ownable {
         lensData.profileIdPointed = content.profileIdPointed;
         lensData.pubIdPointed = content.pubIdPointed;
         lensData.collectModule = LENS_FREE_COLLECT_MODULE;
-        lensData.collectModuleInitData = abi.encode(true);
+        lensData.collectModuleInitData = abi.encode(false);
         lensData.sig = DataTypes.EIP712Signature(
             sig.v,
             sig.r,
@@ -604,7 +604,6 @@ contract TakoLensHub is Ownable {
 
     function _cancelBidMomoka(uint256 index) internal {
         _validateMomokaContentIndex(index);
-        (index);
         MomokaContent memory content = _momokaContentByIndex[index];
         if (content.bidAddress != _msgSender()) revert Errors.NotBidder();
         if (content.bidExpires > block.timestamp) revert Errors.NotExpired();

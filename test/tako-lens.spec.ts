@@ -188,6 +188,17 @@ makeSuiteCleanRoom('TakoLensHub', () => {
     });
   });
 
+  context('User update bid evem', () => {
+    beforeEach(async () => {
+      await init();
+      await initBid();
+    });
+    it('Should success to update bid', async () => {
+      await expect(takoLensHub.connect(user).updateBid(1, 1, 1, { value: 1 }))
+        .to.not.reverted;
+    });
+  });
+
   context('User cancel bid', () => {
     beforeEach(async () => {
       await init();
