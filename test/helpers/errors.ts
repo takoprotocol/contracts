@@ -5,7 +5,7 @@ export const ERRORS = {
 
   EXPIRED: 'Expired',
   WRONG_AMOUNT: 'WrongAmount',
-  PARAMSR_INVALID: 'ParamsrInvalid',
+  PARAMS_INVALID: 'ParamsInvalid',
   NOT_EXPIRED: 'NotExpired',
   TO_PROFILE_LIMIT_EXCEEDED: 'ToProfileLimitExceeded',
   DURATION_LIMIT_EXCEEDED: 'DurationLimitExceeded',

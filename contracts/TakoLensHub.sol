@@ -102,7 +102,10 @@ contract TakoLensHub is Ownable {
 
     constructor(address lensHub, address lensFreeCollectModule) {
         require(lensHub != address(0), "lensHub address cannot be zero");
-        require(lensFreeCollectModule != address(0), "lensFreeCollectModule address cannot be zero");
+        require(
+            lensFreeCollectModule != address(0),
+            "lensFreeCollectModule address cannot be zero"
+        );
 
         LENS_HUB = lensHub;
         LENS_FREE_COLLECT_MODULE = lensFreeCollectModule;
@@ -137,12 +140,18 @@ contract TakoLensHub is Ownable {
     function setLensFreeCollectModule(
         address collectModule
     ) external onlyOwner {
-        require(collectModule != address(0), "collectModule address cannot be zero");
+        require(
+            collectModule != address(0),
+            "collectModule address cannot be zero"
+        );
         LENS_FREE_COLLECT_MODULE = collectModule;
     }
 
     function setFeeCollector(address newsFeeCollector) external onlyOwner {
-        require(newsFeeCollector != address(0), "feeCollector address cannot be zero");
+        require(
+            newsFeeCollector != address(0),
+            "feeCollector address cannot be zero"
+        );
         feeCollector = newsFeeCollector;
     }
 
@@ -271,7 +280,7 @@ contract TakoLensHub is Ownable {
         Content memory content = _contentByIndex[index];
 
         if (content.bidType != BidType.Post) {
-            revert Errors.ParamsrInvalid();
+            revert Errors.ParamsInvalid();
         }
         if (content.state != DataTypes.AuditState.Pending) {
             revert Errors.BidIsClose();
@@ -313,7 +322,7 @@ contract TakoLensHub is Ownable {
         Content memory content = _contentByIndex[index];
 
         if (content.bidType != BidType.Mirror) {
-            revert Errors.ParamsrInvalid();
+            revert Errors.ParamsInvalid();
         }
         if (content.state != DataTypes.AuditState.Pending) {
             revert Errors.BidIsClose();
@@ -354,7 +363,7 @@ contract TakoLensHub is Ownable {
         Content memory content = _contentByIndex[index];
 
         if (content.bidType != BidType.Comment) {
-            revert Errors.ParamsrInvalid();
+            revert Errors.ParamsInvalid();
         }
         if (content.state != DataTypes.AuditState.Pending) {
             revert Errors.BidIsClose();
@@ -482,13 +491,13 @@ contract TakoLensHub is Ownable {
 
     function _validateContentIndex(uint256 index) internal view {
         if (index > _bidCounter) {
-            revert Errors.ParamsrInvalid();
+            revert Errors.ParamsInvalid();
         }
     }
 
     function _validateMomokaContentIndex(uint256 index) internal view {
         if (index > _momokaBidCounter) {
-            revert Errors.ParamsrInvalid();
+            revert Errors.ParamsInvalid();
         }
     }
 
@@ -553,7 +562,7 @@ contract TakoLensHub is Ownable {
 
     function _setDisableAuditTypes(bool[] calldata disableAuditTypes) internal {
         if (disableAuditTypes.length != 3) {
-            revert Errors.ParamsrInvalid();
+            revert Errors.ParamsInvalid();
         }
 
         _disableAuditType[_msgSender()][BidType.Post] = disableAuditTypes[0];
@@ -655,7 +664,8 @@ contract TakoLensHub is Ownable {
 
         if (content.bidAddress != _msgSender()) revert Errors.NotBidder();
         if (content.bidExpires > block.timestamp) revert Errors.NotExpired();
-        if (content.state != DataTypes.AuditState.Pending) revert Errors.BidIsClose();
+        if (content.state != DataTypes.AuditState.Pending)
+            revert Errors.BidIsClose();
         if (content.bidAmount > 0) {
             _sendTokenOrETH(
                 content.bidToken,
@@ -676,7 +686,8 @@ contract TakoLensHub is Ownable {
 
         if (content.bidAddress != _msgSender()) revert Errors.NotBidder();
         if (content.bidExpires > block.timestamp) revert Errors.NotExpired();
-        if (content.state != DataTypes.AuditState.Pending) revert Errors.BidIsClose();
+        if (content.state != DataTypes.AuditState.Pending)
+            revert Errors.BidIsClose();
         if (content.bidAmount > 0) {
             _sendTokenOrETH(
                 content.bidToken,
@@ -691,7 +702,7 @@ contract TakoLensHub is Ownable {
     }
 
     function _loan(address token, uint256 amount) internal {
-        uint256 feeAmount = amount * feeRate / FEE_DENOMINATOR;
+        uint256 feeAmount = (amount * feeRate) / FEE_DENOMINATOR;
         _sendTokenOrETH(token, feeCollector, feeAmount);
         _sendTokenOrETH(token, _msgSender(), amount - feeAmount);
     }

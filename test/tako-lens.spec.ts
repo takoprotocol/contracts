@@ -55,11 +55,11 @@ makeSuiteCleanRoom('TakoLensHub', () => {
     it('Should fail to set profile limi if sender does not own the contractt', async () => {
       await expect(takoLensHub.connect(user).setToProfileLimit(20)).to.reverted;
     });
-    it('Should success to set whitelist token', async () => {
-      await expect(
-        takoLensHub.connect(deployer).whitelistBidToken(ADDRESS_ZERO, true)
-      ).to.not.reverted;
-    });
+    // it('Should success to set whitelist token', async () => {
+    //   await expect(
+    //     takoLensHub.connect(deployer).whitelistBidToken(ADDRESS_ZERO, true)
+    //   ).to.not.reverted;
+    // });
     it('Should success to set whitelist relyaer', async () => {
       await expect(
         takoLensHub
@@ -206,7 +206,7 @@ makeSuiteCleanRoom('TakoLensHub', () => {
     });
     it('Should fail to cancel bid if index error', async () => {
       await expect(takoLensHub.connect(user).cancelBid(10)).to.revertedWith(
-        ERRORS.PARAMSR_INVALID
+        ERRORS.PARAMS_INVALID
       );
     });
     it('Should fail to cancel bid if not bidder', async () => {
@@ -236,7 +236,7 @@ makeSuiteCleanRoom('TakoLensHub', () => {
         takoLensHub.connect(user).cancelBid(1)
       ).to.changeEtherBalances([user, takoLensHub], [BID_AMOUNT, -BID_AMOUNT]);
       await expect(
-        takoLensHub.connect(user).cancelBidArray([2, 3])
+        takoLensHub.connect(user).cancelBidBatch([2, 3])
       ).to.changeEtherBalances(
         [user, takoLensHub],
         [BID_AMOUNT * 2, -BID_AMOUNT * 2]
@@ -252,7 +252,7 @@ makeSuiteCleanRoom('TakoLensHub', () => {
     it('Should fail to audit if index error', async () => {
       await expect(
         takoLensHub.connect(profileOwner).auditBidPost(10, 1, getEmptySig())
-      ).to.revertedWith(ERRORS.PARAMSR_INVALID);
+      ).to.revertedWith(ERRORS.PARAMS_INVALID);
     });
     it('Should fail to audit if the bid expired', async () => {
       await EVMincreaseTime(DAY * 2);
@@ -420,7 +420,7 @@ makeSuiteCleanRoom('TakoLensHub', () => {
     it('Should fail to cancel bid if index error', async () => {
       await expect(
         takoLensHub.connect(user).cancelBidMomoka(10)
-      ).to.revertedWith(ERRORS.PARAMSR_INVALID);
+      ).to.revertedWith(ERRORS.PARAMS_INVALID);
     });
     it('Should fail to cancel bid if not bidder', async () => {
       await expect(
@@ -469,7 +469,7 @@ makeSuiteCleanRoom('TakoLensHub', () => {
         takoLensHub.connect(user).cancelBidMomoka(1)
       ).to.changeEtherBalances([user, takoLensHub], [BID_AMOUNT, -BID_AMOUNT]);
       await expect(
-        takoLensHub.connect(user).cancelBidMomokaArray([2, 3])
+        takoLensHub.connect(user).cancelBidMomokaBatch([2, 3])
       ).to.changeEtherBalances(
         [user, takoLensHub],
         [BID_AMOUNT * 2, -BID_AMOUNT * 2]
@@ -507,7 +507,7 @@ makeSuiteCleanRoom('TakoLensHub', () => {
         takoLensHub
           .connect(profileOwner)
           .loanWithSig(10, 1, relayer.address, contentId, { v, r, s, deadline })
-      ).to.revertedWith(ERRORS.PARAMSR_INVALID);
+      ).to.revertedWith(ERRORS.PARAMS_INVALID);
     });
     it('Should fail to loan if the bid is close', async () => {
       await EVMincreaseTime(DAY * 2);

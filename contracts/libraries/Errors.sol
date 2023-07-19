@@ -9,7 +9,7 @@ library Errors {
 
     error Expired();
     error WrongAmount();
-    error ParamsrInvalid();
+    error ParamsInvalid();
     error NotExpired();
 
     error ToProfileLimitExceeded();
