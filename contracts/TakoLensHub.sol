@@ -213,6 +213,7 @@ contract TakoLensHub is Ownable {
         content.bidAmount += amount;
         content.bidExpires += duration;
         _contentByIndex[index] = content;
+        emit modifiBidEvent(index, content);
     }
 
     function updateBidMomoka(
@@ -230,6 +231,7 @@ contract TakoLensHub is Ownable {
         content.bidAmount += amount;
         content.bidExpires += duration;
         _momokaContentByIndex[index] = content;
+        emit modifiBidMomokaEvnet(index, content);
     }
 
     function cancelBid(uint256 index) external {
