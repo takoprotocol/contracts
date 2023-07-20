@@ -98,7 +98,7 @@ contract TakoLensHub is Ownable {
     event addBidEvent(uint256 index, Content content);
     event modifiBidEvent(uint256 index, Content content);
     event addBidMomokaEvent(uint256 index, MomokaContent content);
-    event modifiBidMomokaEvnet(uint256 index, MomokaContent content);
+    event modifiBidMomokaEvent(uint256 index, MomokaContent content);
 
     constructor(address lensHub, address lensFreeCollectModule) {
         require(lensHub != address(0), "lensHub address cannot be zero");
@@ -231,7 +231,7 @@ contract TakoLensHub is Ownable {
         content.bidAmount += amount;
         content.bidExpires += duration;
         _momokaContentByIndex[index] = content;
-        emit modifiBidMomokaEvnet(index, content);
+        emit modifiBidMomokaEvent(index, content);
     }
 
     function cancelBid(uint256 index) external {
@@ -442,7 +442,7 @@ contract TakoLensHub is Ownable {
         _momokaContentByIndex[index].curatorProfileId = profileId;
         _momokaContentByIndex[index].curatorPubId = contentId;
 
-        emit modifiBidMomokaEvnet(index, _momokaContentByIndex[index]);
+        emit modifiBidMomokaEvent(index, _momokaContentByIndex[index]);
     }
 
     // View
@@ -700,7 +700,7 @@ contract TakoLensHub is Ownable {
 
         _momokaContentByIndex[index].state = DataTypes.AuditState.Cancel;
 
-        emit modifiBidMomokaEvnet(index, _momokaContentByIndex[index]);
+        emit modifiBidMomokaEvent(index, _momokaContentByIndex[index]);
     }
 
     function _loan(address token, uint256 amount) internal {
