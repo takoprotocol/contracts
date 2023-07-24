@@ -480,7 +480,7 @@ contract TakoLensHub is Ownable {
         return _bidCounter;
     }
 
-    function getMomokaBidCunter() external view returns (uint256) {
+    function getMomokaBidCounter() external view returns (uint256) {
         return _momokaBidCounter;
     }
 
