@@ -52,7 +52,7 @@ makeSuiteCleanRoom('TakoLensHub', () => {
       await expect(takoLensHub.connect(user).setFeeRate(100000000)).to.be
         .reverted;
     });
-    it('Should fail to set profile limi if sender does not own the contractt', async () => {
+    it('Should fail to set profile limit if sender does not own the contract', async () => {
       await expect(takoLensHub.connect(user).setToProfileLimit(20)).to.reverted;
     });
     // it('Should success to set whitelist token', async () => {
@@ -60,7 +60,7 @@ makeSuiteCleanRoom('TakoLensHub', () => {
     //     takoLensHub.connect(deployer).whitelistBidToken(ADDRESS_ZERO, true)
     //   ).to.not.reverted;
     // });
-    it('Should success to set whitelist relyaer', async () => {
+    it('Should success to set whitelist relayer', async () => {
       await expect(
         takoLensHub
           .connect(deployer)
@@ -108,7 +108,7 @@ makeSuiteCleanRoom('TakoLensHub', () => {
         )
       ).to.revertedWith(ERRORS.DURATION_LIMIT_EXCEEDED);
     });
-    it('Should fail to bid if the toprofile limit exceeded', async () => {
+    it('Should fail to bid if the to profile limit exceeded', async () => {
       const toProfiles = [];
       for (let i = 0; i < 10; i++) {
         toProfiles.push(i);
@@ -188,7 +188,7 @@ makeSuiteCleanRoom('TakoLensHub', () => {
     });
   });
 
-  context('User update bid evem', () => {
+  context('User update bid evm', () => {
     beforeEach(async () => {
       await init();
       await initBid();
@@ -330,7 +330,7 @@ makeSuiteCleanRoom('TakoLensHub', () => {
         )
       ).to.revertedWith(ERRORS.DURATION_LIMIT_EXCEEDED);
     });
-    it('Should fail to bid if the toprofile limit exceeded', async () => {
+    it('Should fail to bid if the to profile limit exceeded', async () => {
       const toProfiles = [];
       for (let i = 0; i < 10; i++) {
         toProfiles.push(i);
@@ -392,7 +392,7 @@ makeSuiteCleanRoom('TakoLensHub', () => {
           .connect(user)
           .bidMomoka(getBidMomokaBaseParams(), 0, { value: BID_AMOUNT })
       ).to.not.reverted;
-      expect(await takoLensHub.getMomokaBidCunter()).to.eq(1);
+      expect(await takoLensHub.getMomokaBidCounter()).to.eq(1);
     });
     it('Should success to bid comment', async () => {
       await expect(
@@ -400,7 +400,7 @@ makeSuiteCleanRoom('TakoLensHub', () => {
           .connect(user)
           .bidMomoka(getBidMomokaBaseParams(), 1, { value: BID_AMOUNT })
       ).to.not.reverted;
-      expect(await takoLensHub.getMomokaBidCunter()).to.eq(1);
+      expect(await takoLensHub.getMomokaBidCounter()).to.eq(1);
     });
     it('Should success to bid mirror', async () => {
       await expect(
@@ -408,7 +408,7 @@ makeSuiteCleanRoom('TakoLensHub', () => {
           .connect(user)
           .bidMomoka(getBidMomokaBaseParams(), 2, { value: BID_AMOUNT })
       ).to.not.reverted;
-      expect(await takoLensHub.getMomokaBidCunter()).to.eq(1);
+      expect(await takoLensHub.getMomokaBidCounter()).to.eq(1);
     });
   });
 
