@@ -5,6 +5,7 @@ import { readFileSync } from 'fs';
 import { CHAIN, HARDHATEVM_CHAINID, TEST_ACCOUNTS } from './helpers';
 
 const privateKey = readFileSync('.private_key', 'utf-8');
+const privateKeyMain = readFileSync('.private_key_main', 'utf-8');
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -33,6 +34,13 @@ const config: HardhatUserConfig = {
       url: 'https://data-seed-prebsc-1-s1.binance.org:8545/',
       chainId: 97,
       accounts: [privateKey],
+      gas: 'auto',
+      gasPrice: 'auto',
+    },
+    [CHAIN.Polygon]: {
+      chainId: 137,
+      url: 'https://rpc-mainnet.maticvigil.com/',
+      accounts: [privateKeyMain],
       gas: 'auto',
       gasPrice: 'auto',
     },

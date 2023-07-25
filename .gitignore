@@ -9,3 +9,4 @@ typechain-types
 cache
 artifacts
 .private_key
+.private_key_main
