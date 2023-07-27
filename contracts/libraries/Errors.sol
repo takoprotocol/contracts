@@ -21,7 +21,7 @@ library Errors {
     error ETHTransferFailed();
     error SignatureInvalid();
 
-    error NotAuditor();
+    error NotCurator();
     error NotProfileOwner();
     error NotBidder();
     error BidIsClose();

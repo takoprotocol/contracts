@@ -16,7 +16,7 @@ export const ERRORS = {
   ETH_TRANSFER_FAILED: 'ETHTransferFailed',
   SIGNATURE_INVALID: 'SignatureInvalid',
 
-  NOT_AUDITOR: 'NotAuditor',
+  NOT_CURATOR: 'NotCurator',
   NOT_PROFILE_OWNER: 'NotProfileOwner',
   NOT_BIDDER: 'NotBidder',
   BID_IS_CLOSE: 'BidIsClose',

@@ -75,7 +75,7 @@ contract TakoLensHub is Ownable {
     string public constant name = "Tako Lens Hub";
     bytes32 internal constant LOAN_WITH_SIG_TYPEHASH =
         keccak256(
-            "LoanWithSig(uint256 index,address auditor,string contentId,uint256 deadline)"
+            "LoanWithSig(uint256 index,address curator,string contentId,uint256 deadline)"
         );
 
     uint8 public maxToProfileCounter = 5;
@@ -189,7 +189,7 @@ contract TakoLensHub is Ownable {
         _bidMomoka(vars, bidType);
     }
 
-    function bidMomokaArray(
+    function bidMomokaBatch(
         MomokaBidData[] calldata vars,
         BidType[] calldata bidType
     ) external payable {
@@ -234,23 +234,23 @@ contract TakoLensHub is Ownable {
         emit modifiBidMomokaEvent(index, content);
     }
 
-    function cancelBid(uint256 index) external {
-        _cancelBid(index);
+    function claimBackBid(uint256 index) external {
+        _claimBack(index);
     }
 
-    function cancelBidBatch(uint256[] calldata indexArr) external {
+    function claimBackBidBatch(uint256[] calldata indexArr) external {
         for (uint256 i = 0; i < indexArr.length; i++) {
-            _cancelBid(indexArr[i]);
+            _claimBack(indexArr[i]);
         }
     }
 
-    function cancelBidMomoka(uint256 index) external {
-        _cancelBidMomoka(index);
+    function claimBackBidMomoka(uint256 index) external {
+        _claimBackMomoka(index);
     }
 
-    function cancelBidMomokaBatch(uint256[] calldata indexArr) external {
+    function claimBackBidMomokaBatch(uint256[] calldata indexArr) external {
         for (uint256 i = 0; i < indexArr.length; i++) {
-            _cancelBidMomoka(indexArr[i]);
+            _claimBackMomoka(indexArr[i]);
         }
     }
 
@@ -464,6 +464,10 @@ contract TakoLensHub is Ownable {
         return _bidTokenWhitelisted[token];
     }
 
+    function isRelayerWhitelisted(address wallet) external view returns (bool) {
+        return _relayerWhitelisted[wallet];
+    }
+
     function getContentByIndex(
         uint256 index
     ) external view returns (Content memory) {
@@ -548,7 +552,7 @@ contract TakoLensHub is Ownable {
             }
         }
         if (!flag) {
-            revert Errors.NotAuditor();
+            revert Errors.NotCurator();
         }
     }
 
@@ -659,7 +663,7 @@ contract TakoLensHub is Ownable {
         emit addBidMomokaEvent(counter, content);
     }
 
-    function _cancelBid(uint256 index) internal {
+    function _claimBack(uint256 index) internal {
         _validateContentIndex(index);
 
         Content memory content = _contentByIndex[index];
@@ -681,7 +685,7 @@ contract TakoLensHub is Ownable {
         emit modifiBidEvent(index, _contentByIndex[index]);
     }
 
-    function _cancelBidMomoka(uint256 index) internal {
+    function _claimBackMomoka(uint256 index) internal {
         _validateMomokaContentIndex(index);
 
         MomokaContent memory content = _momokaContentByIndex[index];

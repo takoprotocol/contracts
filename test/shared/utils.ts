@@ -15,7 +15,7 @@ export const FAKE_PRIVATEKEY =
 
 export const ADDRESS_ZERO = ethers.constants.AddressZero;
 
-export async function EVMincreaseTime(time: number) {
+export async function EVMIncreaseTime(time: number) {
   await network.provider.request({
     method: 'evm_increaseTime',
     params: [time],
