@@ -9,6 +9,7 @@ import "./interfaces/ILensHub.sol";
 import "./libraries/SigUtils.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 
 contract TakoLensHub is Ownable {
     using SafeERC20 for IERC20;
@@ -73,6 +74,7 @@ contract TakoLensHub is Ownable {
     }
 
     string public constant name = "Tako Lens Hub";
+    bytes32 public merkleRoot;
     bytes32 internal constant LOAN_WITH_SIG_TYPEHASH =
         keccak256(
             "LoanWithSig(uint256 index,address curator,string contentId,uint256 deadline)"
@@ -100,7 +102,23 @@ contract TakoLensHub is Ownable {
     event addBidMomokaEvent(uint256 index, MomokaContent content);
     event modifiBidMomokaEvent(uint256 index, MomokaContent content);
 
-    constructor(address lensHub, address lensFreeCollectModule) {
+    modifier onlyWhitelisted(DataTypes.MerkleVerifyData memory verifyData) {
+        if (merkleRoot != bytes32(0)) {
+            address wallet = msg.sender;
+            bytes32 node = keccak256(
+                abi.encodePacked(verifyData.index, wallet)
+            );
+            if (!MerkleProof.verify(verifyData.merkleProof, merkleRoot, node))
+                revert Errors.NotWhitelisted();
+        }
+        _;
+    }
+
+    constructor(
+        address lensHub,
+        address lensFreeCollectModule,
+        bytes32 initMerkleRoot
+    ) {
         require(lensHub != address(0), "lensHub address cannot be zero");
         require(
             lensFreeCollectModule != address(0),
@@ -109,13 +127,17 @@ contract TakoLensHub is Ownable {
 
         LENS_HUB = lensHub;
         LENS_FREE_COLLECT_MODULE = lensFreeCollectModule;
-
+        merkleRoot = initMerkleRoot;
         feeCollector = _msgSender();
     }
 
     receive() external payable {}
 
     // Gov
+    function setMerkleRoot(bytes32 newMerkelRoot) external onlyOwner {
+        merkleRoot = newMerkelRoot;
+    }
+
     function whitelistBidToken(
         address token,
         bool whitelist
@@ -169,14 +191,19 @@ contract TakoLensHub is Ownable {
     }
 
     // User
-    function bid(BidData calldata vars, BidType bidType) external payable {
+    function bid(
+        BidData calldata vars,
+        BidType bidType,
+        DataTypes.MerkleVerifyData calldata verifyData
+    ) external payable onlyWhitelisted(verifyData) {
         _bid(vars, bidType);
     }
 
     function bidBatch(
         BidData[] calldata vars,
-        BidType[] calldata bidType
-    ) external payable {
+        BidType[] calldata bidType,
+        DataTypes.MerkleVerifyData calldata verifyData
+    ) external payable onlyWhitelisted(verifyData) {
         for (uint256 i = 0; i < vars.length; i++) {
             _bid(vars[i], bidType[i]);
         }
@@ -184,15 +211,17 @@ contract TakoLensHub is Ownable {
 
     function bidMomoka(
         MomokaBidData calldata vars,
-        BidType bidType
-    ) external payable {
+        BidType bidType,
+        DataTypes.MerkleVerifyData calldata verifyData
+    ) external payable onlyWhitelisted(verifyData) {
         _bidMomoka(vars, bidType);
     }
 
     function bidMomokaBatch(
         MomokaBidData[] calldata vars,
-        BidType[] calldata bidType
-    ) external payable {
+        BidType[] calldata bidType,
+        DataTypes.MerkleVerifyData calldata verifyData
+    ) external payable onlyWhitelisted(verifyData) {
         for (uint256 i = 0; i < vars.length; i++) {
             _bidMomoka(vars[i], bidType[i]);
         }

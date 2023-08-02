@@ -91,6 +91,29 @@ makeSuiteCleanRoom('TakoLensHub', () => {
     beforeEach(async () => {
       await init();
     });
+    it('Should Fail to bid if ths sender not whitelist', async () => {
+      await expect(
+        takoLensHub
+          .connect(deployer)
+          .setMerkleRoot(
+            '0x6da010d92588a7015cfbba43d76af2ff58f4333351f7a5f6d9eba8cffcef89fc'
+          )
+      ).to.not.reverted;
+      await expect(
+        takoLensHub
+          .connect(user)
+          .bid(
+            getBidBaseParams(),
+            0,
+            getMerkleBaseData(1, [
+              '0xcf119d2152e5d3087fb516f978fea305a80c2feee347433ccdfd77a2ef67d2f2',
+              '0x72d1b837a68a23075f2c8399bb889eca16144f18ecdbf98c3643d5f0fcb55995',
+              '0xfeffa1e95c85617663e204ee34ff063aa0f0e5e47ce4b9cefe5057a0b1295648',
+              '0x329c0dded61786c21a44b54c8f24a40776866b4ad0a1b8f1ba1b3714bd546239',
+            ])
+          )
+      ).to.revertedWith(ERRORS.NOT_WHITELISTED);
+    });
     it('Should fail to bid if the duration limit exceeded', async () => {
       const maxDuration = (await takoLensHub.maxDuration()).toNumber();
       await expect(
@@ -104,7 +127,8 @@ makeSuiteCleanRoom('TakoLensHub', () => {
             duration: DAY * maxDuration + DAY,
             toProfiles: [1],
           },
-          0
+          0,
+          getMerkleBaseData()
         )
       ).to.revertedWith(ERRORS.DURATION_LIMIT_EXCEEDED);
     });
@@ -114,7 +138,9 @@ makeSuiteCleanRoom('TakoLensHub', () => {
         toProfiles.push(i);
       }
       await expect(
-        takoLensHub.connect(user).bid(getBidBaseParams(toProfiles), 0)
+        takoLensHub
+          .connect(user)
+          .bid(getBidBaseParams(toProfiles), 0, getMerkleBaseData())
       ).to.revertedWith(ERRORS.TO_PROFILE_LIMIT_EXCEEDED);
     });
     it('Should fail to bid if the amount not reached minimum', async () => {
@@ -124,14 +150,18 @@ makeSuiteCleanRoom('TakoLensHub', () => {
           .setMinBid(ADDRESS_ZERO, BID_AMOUNT + 1)
       ).to.not.reverted;
       await expect(
-        takoLensHub.connect(user).bid(getBidBaseParams(), 0)
+        takoLensHub
+          .connect(user)
+          .bid(getBidBaseParams(), 0, getMerkleBaseData())
       ).to.revertedWith(ERRORS.NOT_REACHED_MINIMUM);
     });
     it('Should fail to bid if insufficient input amount', async () => {
       await expect(
         takoLensHub
           .connect(user)
-          .bid(getBidBaseParams(), 0, { value: BID_AMOUNT - 1 })
+          .bid(getBidBaseParams(), 0, getMerkleBaseData(), {
+            value: BID_AMOUNT - 1,
+          })
       ).to.revertedWith(ERRORS.INSUFFICIENT_INPUT_AMOUNT);
     });
     it('Should fail to bid if the bid token not whitelisted', async () => {
@@ -146,7 +176,8 @@ makeSuiteCleanRoom('TakoLensHub', () => {
             duration: DAY,
             toProfiles: [1],
           },
-          0
+          0,
+          getMerkleBaseData()
         )
       ).to.revertedWith(ERRORS.BID_TOKEN_NOT_WHITELISTED);
     });
@@ -159,14 +190,43 @@ makeSuiteCleanRoom('TakoLensHub', () => {
       await expect(
         takoLensHub
           .connect(user)
-          .bid(getBidBaseParams(), 0, { value: BID_AMOUNT })
+          .bid(getBidBaseParams(), 0, getMerkleBaseData(), {
+            value: BID_AMOUNT,
+          })
       ).to.revertedWith(ERRORS.BID_TYPE_NOT_ACCEPT);
+    });
+    it('Should Success to bid post when set merkle root', async () => {
+      await expect(
+        takoLensHub
+          .connect(deployer)
+          .setMerkleRoot(
+            '0x6da010d92588a7015cfbba43d76af2ff58f4333351f7a5f6d9eba8cffcef89fc'
+          )
+      ).to.not.reverted;
+      await expect(
+        takoLensHub
+          .connect(user)
+          .bid(
+            getBidBaseParams(),
+            0,
+            getMerkleBaseData(4, [
+              '0xac54a44045f747190b78564a40c69f04ae53ab45cc0c6661b42f1d67f8d226b6',
+              '0x336803c370ba7f390432d11d86955ccac5bc6df54231824a7c01a07430e73550',
+              '0x6d91567d1ddac6003435f8f073607b2bd660838dab8dec605e0f8bc3e89ae398',
+              '0x516c4e3c60008bb84f25bbafbe1f58add8fb6e3df9ca41dc7112e1d41a831426',
+              '0x1360e199edfe36500630b239a37004ab1dc4ed4a5053e203ee975f4ed34ba84c',
+            ]),
+            { value: BID_AMOUNT }
+          )
+      ).to.not.reverted;
     });
     it('Should success to bid post', async () => {
       await expect(
         takoLensHub
           .connect(user)
-          .bid(getBidBaseParams(), 0, { value: BID_AMOUNT })
+          .bid(getBidBaseParams(), 0, getMerkleBaseData(), {
+            value: BID_AMOUNT,
+          })
       ).to.not.reverted;
       expect(await takoLensHub.getBidCounter()).to.eq(1);
     });
@@ -174,7 +234,9 @@ makeSuiteCleanRoom('TakoLensHub', () => {
       await expect(
         takoLensHub
           .connect(user)
-          .bid(getBidBaseParams(), 1, { value: BID_AMOUNT })
+          .bid(getBidBaseParams(), 1, getMerkleBaseData(), {
+            value: BID_AMOUNT,
+          })
       ).to.not.reverted;
       expect(await takoLensHub.getBidCounter()).to.eq(1);
     });
@@ -182,7 +244,9 @@ makeSuiteCleanRoom('TakoLensHub', () => {
       await expect(
         takoLensHub
           .connect(user)
-          .bid(getBidBaseParams(), 2, { value: BID_AMOUNT })
+          .bid(getBidBaseParams(), 2, getMerkleBaseData(), {
+            value: BID_AMOUNT,
+          })
       ).to.not.reverted;
       expect(await takoLensHub.getBidCounter()).to.eq(1);
     });
@@ -260,6 +324,7 @@ makeSuiteCleanRoom('TakoLensHub', () => {
       await expect(
         takoLensHub.connect(profileOwner).auditBidPost(1, 1, getEmptySig())
       ).to.revertedWith(ERRORS.EXPIRED);
+      ethers.constants.HashZero;
     });
     it('Should fail to audit if sender not profile Owner', async () => {
       await expect(
@@ -326,7 +391,8 @@ makeSuiteCleanRoom('TakoLensHub', () => {
             duration: DAY * maxDuration + DAY,
             toProfiles: [1],
           },
-          0
+          0,
+          getMerkleBaseData()
         )
       ).to.revertedWith(ERRORS.DURATION_LIMIT_EXCEEDED);
     });
@@ -338,7 +404,7 @@ makeSuiteCleanRoom('TakoLensHub', () => {
       await expect(
         takoLensHub
           .connect(user)
-          .bidMomoka(getBidMomokaBaseParams(toProfiles), 0)
+          .bidMomoka(getBidMomokaBaseParams(toProfiles), 0, getMerkleBaseData())
       ).to.revertedWith(ERRORS.TO_PROFILE_LIMIT_EXCEEDED);
     });
     it('Should fail to bid if the amount not reached minimum', async () => {
@@ -348,14 +414,18 @@ makeSuiteCleanRoom('TakoLensHub', () => {
           .setMinBid(ADDRESS_ZERO, BID_AMOUNT + 1)
       ).to.not.reverted;
       await expect(
-        takoLensHub.connect(user).bidMomoka(getBidMomokaBaseParams(), 0)
+        takoLensHub
+          .connect(user)
+          .bidMomoka(getBidMomokaBaseParams(), 0, getMerkleBaseData())
       ).to.revertedWith(ERRORS.NOT_REACHED_MINIMUM);
     });
     it('Should fail to bid if insufficient input amount', async () => {
       await expect(
         takoLensHub
           .connect(user)
-          .bidMomoka(getBidMomokaBaseParams(), 0, { value: BID_AMOUNT - 1 })
+          .bidMomoka(getBidMomokaBaseParams(), 0, getMerkleBaseData(), {
+            value: BID_AMOUNT - 1,
+          })
       ).to.revertedWith(ERRORS.INSUFFICIENT_INPUT_AMOUNT);
     });
     it('Should fail to bid if the bid token not whitelisted', async () => {
@@ -370,7 +440,8 @@ makeSuiteCleanRoom('TakoLensHub', () => {
             duration: DAY,
             toProfiles: [1],
           },
-          0
+          0,
+          getMerkleBaseData()
         )
       ).to.revertedWith(ERRORS.BID_TOKEN_NOT_WHITELISTED);
     });
@@ -383,14 +454,18 @@ makeSuiteCleanRoom('TakoLensHub', () => {
       await expect(
         takoLensHub
           .connect(user)
-          .bidMomoka(getBidMomokaBaseParams(), 0, { value: BID_AMOUNT })
+          .bidMomoka(getBidMomokaBaseParams(), 0, getMerkleBaseData(), {
+            value: BID_AMOUNT,
+          })
       ).to.revertedWith(ERRORS.BID_TYPE_NOT_ACCEPT);
     });
     it('Should success to bid post', async () => {
       await expect(
         takoLensHub
           .connect(user)
-          .bidMomoka(getBidMomokaBaseParams(), 0, { value: BID_AMOUNT })
+          .bidMomoka(getBidMomokaBaseParams(), 0, getMerkleBaseData(), {
+            value: BID_AMOUNT,
+          })
       ).to.not.reverted;
       expect(await takoLensHub.getMomokaBidCounter()).to.eq(1);
     });
@@ -398,7 +473,9 @@ makeSuiteCleanRoom('TakoLensHub', () => {
       await expect(
         takoLensHub
           .connect(user)
-          .bidMomoka(getBidMomokaBaseParams(), 1, { value: BID_AMOUNT })
+          .bidMomoka(getBidMomokaBaseParams(), 1, getMerkleBaseData(), {
+            value: BID_AMOUNT,
+          })
       ).to.not.reverted;
       expect(await takoLensHub.getMomokaBidCounter()).to.eq(1);
     });
@@ -406,7 +483,9 @@ makeSuiteCleanRoom('TakoLensHub', () => {
       await expect(
         takoLensHub
           .connect(user)
-          .bidMomoka(getBidMomokaBaseParams(), 2, { value: BID_AMOUNT })
+          .bidMomoka(getBidMomokaBaseParams(), 2, getMerkleBaseData(), {
+            value: BID_AMOUNT,
+          })
       ).to.not.reverted;
       expect(await takoLensHub.getMomokaBidCounter()).to.eq(1);
     });
@@ -570,13 +649,19 @@ async function init() {
 
 async function initBid() {
   await expect(
-    takoLensHub.connect(user).bid(getBidBaseParams(), 0, { value: BID_AMOUNT })
+    takoLensHub.connect(user).bid(getBidBaseParams(), 0, getMerkleBaseData(), {
+      value: BID_AMOUNT,
+    })
   ).to.not.reverted;
   await expect(
-    takoLensHub.connect(user).bid(getBidBaseParams(), 1, { value: BID_AMOUNT })
+    takoLensHub.connect(user).bid(getBidBaseParams(), 1, getMerkleBaseData(), {
+      value: BID_AMOUNT,
+    })
   ).to.not.reverted;
   await expect(
-    takoLensHub.connect(user).bid(getBidBaseParams(), 2, { value: BID_AMOUNT })
+    takoLensHub.connect(user).bid(getBidBaseParams(), 2, getMerkleBaseData(), {
+      value: BID_AMOUNT,
+    })
   ).to.not.reverted;
 }
 
@@ -584,17 +669,23 @@ async function initMomokaBid() {
   await expect(
     takoLensHub
       .connect(user)
-      .bidMomoka(getBidMomokaBaseParams(), 0, { value: BID_AMOUNT })
+      .bidMomoka(getBidMomokaBaseParams(), 0, getMerkleBaseData(), {
+        value: BID_AMOUNT,
+      })
   ).to.not.reverted;
   await expect(
     takoLensHub
       .connect(user)
-      .bidMomoka(getBidMomokaBaseParams(), 1, { value: BID_AMOUNT })
+      .bidMomoka(getBidMomokaBaseParams(), 1, getMerkleBaseData(), {
+        value: BID_AMOUNT,
+      })
   ).to.not.reverted;
   await expect(
     takoLensHub
       .connect(user)
-      .bidMomoka(getBidMomokaBaseParams(), 2, { value: BID_AMOUNT })
+      .bidMomoka(getBidMomokaBaseParams(), 2, getMerkleBaseData(), {
+        value: BID_AMOUNT,
+      })
   ).to.not.reverted;
 }
 
@@ -619,6 +710,13 @@ function getBidMomokaBaseParams(toProfiles: number[] = [1]) {
     bidAmount: BID_AMOUNT,
     duration: DAY,
     toProfiles: toProfiles,
+  };
+}
+
+function getMerkleBaseData(index?: number, merkleProof?: string[]) {
+  return {
+    index: index || 0,
+    merkleProof: merkleProof || [],
   };
 }
 

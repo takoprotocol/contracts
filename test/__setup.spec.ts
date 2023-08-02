@@ -62,7 +62,11 @@ async function initContract() {
 
   takoLensHub = (await takoLensHubFactory
     .connect(deployer)
-    .deploy(lensHubMock.address, lensFreeCollectModule.address)) as TakoLensHub;
+    .deploy(
+      lensHubMock.address,
+      lensFreeCollectModule.address,
+      ethers.constants.HashZero
+    )) as TakoLensHub;
   erc20Token = (await erc20TokenFactory
     .connect(deployer)
     .deploy()) as ERC20Token;

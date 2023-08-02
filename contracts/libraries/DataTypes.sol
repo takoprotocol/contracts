@@ -16,4 +16,9 @@ library DataTypes {
         Pass,
         Cancel
     }
+
+    struct MerkleVerifyData {
+        uint256 index;
+        bytes32[] merkleProof;
+    }
 }
