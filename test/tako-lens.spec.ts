@@ -9,6 +9,7 @@ import {
   user,
   user1,
   users,
+  lensFreeCollectModule,
 } from './__setup.spec';
 import { ERRORS } from './helpers/errors';
 import {
@@ -31,6 +32,9 @@ const contentId = '0x01-01';
 
 makeSuiteCleanRoom('TakoLensHub', () => {
   context('Gov', () => {
+    beforeEach(async () => {
+      await init();
+    });
     it('Should fail to set whitelist token if sender does not own the contract', async () => {
       await expect(
         takoLensHub.connect(user).whitelistBidToken(ADDRESS_ZERO, true)
@@ -45,12 +49,10 @@ makeSuiteCleanRoom('TakoLensHub', () => {
     });
     it('Should fail to set fee collector if sender does not own the contract', async () => {
       await expect(
-        takoLensHub.connect(user).setFeeCollector(deployer.getAddress())
+        takoLensHub
+          .connect(user)
+          .setFeeCollector(deployer.getAddress(), 100000000)
       ).to.be.reverted;
-    });
-    it('Should fail to set fee rate if sender does not own the contract', async () => {
-      await expect(takoLensHub.connect(user).setFeeRate(100000000)).to.be
-        .reverted;
     });
     it('Should fail to set profile limit if sender does not own the contract', async () => {
       await expect(takoLensHub.connect(user).setToProfileLimit(20)).to.reverted;
@@ -69,17 +71,17 @@ makeSuiteCleanRoom('TakoLensHub', () => {
     });
     it('Should success to set lens hub', async () => {
       await expect(
-        takoLensHub.connect(deployer).setLensHub(lensHubMock.address)
+        takoLensHub
+          .connect(deployer)
+          .setLensContracts(lensHubMock.address, lensFreeCollectModule.address)
       ).to.not.reverted;
     });
     it('Should success to set fee collector', async () => {
       await expect(
-        takoLensHub.connect(deployer).setFeeCollector(deployer.getAddress())
+        takoLensHub
+          .connect(deployer)
+          .setFeeCollector(deployer.getAddress(), 100000000)
       ).to.not.reverted;
-    });
-    it('Should success to set fee rate', async () => {
-      await expect(takoLensHub.connect(deployer).setFeeRate(100000000)).to.not
-        .reverted;
     });
     it('Should success to set profile limit', async () => {
       await expect(takoLensHub.connect(deployer).setToProfileLimit(20)).to.not
@@ -645,6 +647,11 @@ async function init() {
   profileOwner = users[0];
   profileOwner1 = users[1];
   officialFeeRate = (await takoLensHub.feeRate()).toNumber();
+  await expect(
+    takoLensHub
+      .connect(deployer)
+      .setGovernance(await deployer.getAddress(), true)
+  ).to.not.reverted;
 }
 
 async function initBid() {

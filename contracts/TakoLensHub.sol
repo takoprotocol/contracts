@@ -94,6 +94,7 @@ contract TakoLensHub is Ownable {
     uint256 _momokaBidCounter;
     mapping(uint256 => MomokaContent) internal _momokaContentByIndex;
     mapping(address => bool) internal _relayerWhitelisted;
+    mapping(address => bool) internal _governances;
 
     uint256 public constant FEE_DENOMINATOR = 10 ** 10;
 
@@ -102,6 +103,12 @@ contract TakoLensHub is Ownable {
     event addBidMomokaEvent(uint256 index, MomokaContent content);
     event modifiBidMomokaEvent(uint256 index, MomokaContent content);
 
+    modifier onlyGov() {
+        if (!_governances[_msgSender()]) {
+            revert Errors.NotGovernance();
+        }
+        _;
+    }
     modifier onlyWhitelisted(DataTypes.MerkleVerifyData memory verifyData) {
         if (merkleRoot != bytes32(0)) {
             address wallet = msg.sender;
@@ -133,60 +140,59 @@ contract TakoLensHub is Ownable {
 
     receive() external payable {}
 
+    // Owner
+    function setFeeCollector(
+        address newsFeeCollector,
+        uint256 newFeeRate
+    ) external onlyOwner {
+        require(
+            newsFeeCollector != address(0),
+            "feeCollector address cannot be zero"
+        );
+        require(newFeeRate <= FEE_DENOMINATOR, "new fee rate exceeds maximum");
+        feeRate = newFeeRate;
+        feeCollector = newsFeeCollector;
+    }
+
+    function setGovernance(address gov, bool whitelist) external onlyOwner {
+        _governances[gov] = whitelist;
+    }
+
     // Gov
-    function setMerkleRoot(bytes32 newMerkelRoot) external onlyOwner {
+    function setLensContracts(
+        address hub,
+        address collectModule
+    ) external onlyGov {
+        require(
+            collectModule != address(0),
+            "collectModule address cannot be zero"
+        );
+        require(hub != address(0), "hub address cannot be zero");
+        LENS_HUB = hub;
+        LENS_FREE_COLLECT_MODULE = collectModule;
+    }
+
+    function setMerkleRoot(bytes32 newMerkelRoot) external onlyGov {
         merkleRoot = newMerkelRoot;
     }
 
-    function whitelistBidToken(
-        address token,
-        bool whitelist
-    ) external onlyOwner {
-        require(token != address(0), "token address cannot be zero");
+    function whitelistBidToken(address token, bool whitelist) external onlyGov {
         _bidTokenWhitelisted[token] = whitelist;
     }
 
     function whitelistRelayer(
         address relayer,
         bool whitelist
-    ) external onlyOwner {
+    ) external onlyGov {
         require(relayer != address(0), "relayer address cannot be zero");
         _relayerWhitelisted[relayer] = whitelist;
     }
 
-    function setLensHub(address hub) external onlyOwner {
-        require(hub != address(0), "hub address cannot be zero");
-        LENS_HUB = hub;
-    }
-
-    function setLensFreeCollectModule(
-        address collectModule
-    ) external onlyOwner {
-        require(
-            collectModule != address(0),
-            "collectModule address cannot be zero"
-        );
-        LENS_FREE_COLLECT_MODULE = collectModule;
-    }
-
-    function setFeeCollector(address newsFeeCollector) external onlyOwner {
-        require(
-            newsFeeCollector != address(0),
-            "feeCollector address cannot be zero"
-        );
-        feeCollector = newsFeeCollector;
-    }
-
-    function setFeeRate(uint256 newFeeRate) external onlyOwner {
-        require(newFeeRate <= FEE_DENOMINATOR, "new fee rate exceeds maximum");
-        feeRate = newFeeRate;
-    }
-
-    function setToProfileLimit(uint8 counter) external onlyOwner {
+    function setToProfileLimit(uint8 counter) external onlyGov {
         maxToProfileCounter = counter;
     }
 
-    function setMaxDuration(uint256 max) external onlyOwner {
+    function setMaxDuration(uint256 max) external onlyGov {
         maxDuration = max;
     }
 
@@ -495,6 +501,10 @@ contract TakoLensHub is Ownable {
 
     function isRelayerWhitelisted(address wallet) external view returns (bool) {
         return _relayerWhitelisted[wallet];
+    }
+
+    function isGovernance(address wallet) external view returns (bool) {
+        return _governances[wallet];
     }
 
     function getContentByIndex(

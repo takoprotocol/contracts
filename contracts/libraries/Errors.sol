@@ -6,6 +6,7 @@ library Errors {
     error SignatureExpired();
     error BidTokenNotWhitelisted();
     error NotWhitelisted();
+    error NotGovernance();
 
     error Expired();
     error WrongAmount();
