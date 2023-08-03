@@ -14,7 +14,7 @@ import {
 import { ERRORS } from './helpers/errors';
 import {
   ADDRESS_ZERO,
-  AuditState,
+  AuditStatus,
   EVMMine,
   EVMIncreaseTime,
 } from './shared/utils';
@@ -347,7 +347,7 @@ makeSuiteCleanRoom('TakoLensHub', () => {
         [officialFee, BID_AMOUNT - officialFee, -BID_AMOUNT]
       );
       expect((await takoLensHub.getContentByIndex(1)).state).to.eq(
-        AuditState.Pass
+        AuditStatus.Pass
       );
     });
     it('Should success to audit comment', async () => {
@@ -359,7 +359,7 @@ makeSuiteCleanRoom('TakoLensHub', () => {
         [officialFee, BID_AMOUNT - officialFee, -BID_AMOUNT]
       );
       expect((await takoLensHub.getContentByIndex(2)).state).to.eq(
-        AuditState.Pass
+        AuditStatus.Pass
       );
     });
     it('Should success to audit mirror', async () => {
@@ -371,7 +371,7 @@ makeSuiteCleanRoom('TakoLensHub', () => {
         [officialFee, BID_AMOUNT - officialFee, -BID_AMOUNT]
       );
       expect((await takoLensHub.getContentByIndex(3)).state).to.eq(
-        AuditState.Pass
+        AuditStatus.Pass
       );
     });
   });
@@ -636,7 +636,7 @@ makeSuiteCleanRoom('TakoLensHub', () => {
         [officialFee, BID_AMOUNT - officialFee, -BID_AMOUNT]
       );
       expect((await takoLensHub.getMomokaContentByIndex(1)).state).to.eq(
-        AuditState.Pass
+        AuditStatus.Pass
       );
     });
   });

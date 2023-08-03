@@ -44,7 +44,7 @@ contract TakoLensHub is Ownable {
         uint256[] toProfiles;
         uint256 curatorProfileId;
         uint256 curatorPubId;
-        DataTypes.AuditState state;
+        DataTypes.AuditStatus state;
         BidType bidType;
     }
 
@@ -69,7 +69,7 @@ contract TakoLensHub is Ownable {
         uint256[] toProfiles;
         uint256 curatorProfileId;
         string curatorPubId;
-        DataTypes.AuditState state;
+        DataTypes.AuditStatus state;
         BidType bidType;
     }
 
@@ -319,7 +319,7 @@ contract TakoLensHub is Ownable {
         if (content.bidType != BidType.Post) {
             revert Errors.ParamsInvalid();
         }
-        if (content.state != DataTypes.AuditState.Pending) {
+        if (content.state != DataTypes.AuditStatus.Pending) {
             revert Errors.BidIsClose();
         }
 
@@ -342,7 +342,7 @@ contract TakoLensHub is Ownable {
 
         content.curatorPubId = _postWithSign(lensData);
         content.curatorProfileId = profileId;
-        content.state = DataTypes.AuditState.Pass;
+        content.state = DataTypes.AuditStatus.Pass;
 
         _contentByIndex[index] = content;
 
@@ -361,7 +361,7 @@ contract TakoLensHub is Ownable {
         if (content.bidType != BidType.Mirror) {
             revert Errors.ParamsInvalid();
         }
-        if (content.state != DataTypes.AuditState.Pending) {
+        if (content.state != DataTypes.AuditStatus.Pending) {
             revert Errors.BidIsClose();
         }
 
@@ -383,7 +383,7 @@ contract TakoLensHub is Ownable {
 
         content.curatorPubId = _mirrorWithSign(lensData);
         content.curatorProfileId = profileId;
-        content.state = DataTypes.AuditState.Pass;
+        content.state = DataTypes.AuditStatus.Pass;
 
         _contentByIndex[index] = content;
 
@@ -402,7 +402,7 @@ contract TakoLensHub is Ownable {
         if (content.bidType != BidType.Comment) {
             revert Errors.ParamsInvalid();
         }
-        if (content.state != DataTypes.AuditState.Pending) {
+        if (content.state != DataTypes.AuditStatus.Pending) {
             revert Errors.BidIsClose();
         }
 
@@ -427,7 +427,7 @@ contract TakoLensHub is Ownable {
 
         content.curatorPubId = _commentWithSign(lensData);
         content.curatorProfileId = profileId;
-        content.state = DataTypes.AuditState.Pass;
+        content.state = DataTypes.AuditStatus.Pass;
 
         _contentByIndex[index] = content;
 
@@ -448,7 +448,7 @@ contract TakoLensHub is Ownable {
         }
 
         MomokaContent memory content = _momokaContentByIndex[index];
-        if (content.state != DataTypes.AuditState.Pending) {
+        if (content.state != DataTypes.AuditStatus.Pending) {
             revert Errors.BidIsClose();
         }
 
@@ -473,7 +473,7 @@ contract TakoLensHub is Ownable {
 
         _loan(content.bidToken, content.bidAmount);
 
-        _momokaContentByIndex[index].state = DataTypes.AuditState.Pass;
+        _momokaContentByIndex[index].state = DataTypes.AuditStatus.Pass;
         _momokaContentByIndex[index].curatorProfileId = profileId;
         _momokaContentByIndex[index].curatorPubId = contentId;
 
@@ -659,7 +659,7 @@ contract TakoLensHub is Ownable {
             content.pubIdPointed = vars.pubIdPointed;
         }
 
-        content.state = DataTypes.AuditState.Pending;
+        content.state = DataTypes.AuditStatus.Pending;
 
         _contentByIndex[counter] = content;
         emit addBidEvent(counter, content);
@@ -696,7 +696,7 @@ contract TakoLensHub is Ownable {
             content.mirror = vars.mirror;
         }
 
-        content.state = DataTypes.AuditState.Pending;
+        content.state = DataTypes.AuditStatus.Pending;
 
         _momokaContentByIndex[counter] = content;
         emit addBidMomokaEvent(counter, content);
@@ -709,7 +709,7 @@ contract TakoLensHub is Ownable {
 
         if (content.bidAddress != _msgSender()) revert Errors.NotBidder();
         if (content.bidExpires > block.timestamp) revert Errors.NotExpired();
-        if (content.state != DataTypes.AuditState.Pending)
+        if (content.state != DataTypes.AuditStatus.Pending)
             revert Errors.BidIsClose();
         if (content.bidAmount > 0) {
             _sendTokenOrETH(
@@ -719,7 +719,7 @@ contract TakoLensHub is Ownable {
             );
         }
 
-        _contentByIndex[index].state = DataTypes.AuditState.Cancel;
+        _contentByIndex[index].state = DataTypes.AuditStatus.Cancel;
 
         emit modifiBidEvent(index, _contentByIndex[index]);
     }
@@ -731,7 +731,7 @@ contract TakoLensHub is Ownable {
 
         if (content.bidAddress != _msgSender()) revert Errors.NotBidder();
         if (content.bidExpires > block.timestamp) revert Errors.NotExpired();
-        if (content.state != DataTypes.AuditState.Pending)
+        if (content.state != DataTypes.AuditStatus.Pending)
             revert Errors.BidIsClose();
         if (content.bidAmount > 0) {
             _sendTokenOrETH(
@@ -741,7 +741,7 @@ contract TakoLensHub is Ownable {
             );
         }
 
-        _momokaContentByIndex[index].state = DataTypes.AuditState.Cancel;
+        _momokaContentByIndex[index].state = DataTypes.AuditStatus.Cancel;
 
         emit modifiBidMomokaEvent(index, _momokaContentByIndex[index]);
     }

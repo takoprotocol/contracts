@@ -10,7 +10,7 @@ library DataTypes {
         uint256 deadline;
     }
 
-    enum AuditState {
+    enum AuditStatus {
         Pending,
         Refuse,
         Pass,

@@ -3,7 +3,7 @@ import hre from 'hardhat';
 
 let snapshotId = '0x1';
 
-export enum AuditState {
+export enum AuditStatus {
   Pending,
   Refuse,
   Pass,
