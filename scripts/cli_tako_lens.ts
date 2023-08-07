@@ -14,7 +14,12 @@ const lensHub: { [key: string]: string } = {
 };
 
 const deployed: { [key: string]: string } = {
-  [CHAIN.PolygonTestNet]: '0x8b54AB63D420d9689BCb3cc7517F0034868c2C1F',
+  [CHAIN.PolygonTestNet]: '0xEA3A69576c9411333be632d4C3d6406edee06342',
+};
+
+const lensFreeCollectModule: { [key: string]: string } = {
+  [CHAIN.Polygon]: '0x23b9467334bEb345aAa6fd1545538F3d54436e96',
+  [CHAIN.PolygonTestNet]: '0x0BE6bD7092ee83D44a6eC1D949626FeE48caB30c',
 };
 
 async function main() {
@@ -42,7 +47,11 @@ async function deploy() {
   const networkName = hre.network.name;
   const factory = await hre.ethers.getContractFactory('TakoLensHub');
 
-  const takoLensHub = await factory.deploy(lensHub[networkName]);
+  const takoLensHub = await factory.deploy(
+    lensHub[networkName],
+    lensFreeCollectModule[networkName],
+    hre.ethers.constants.HashZero
+  );
 
   console.log(`deploy tako lens hub, network = ${networkName}`);
 
