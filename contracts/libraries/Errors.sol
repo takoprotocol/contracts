@@ -13,7 +13,7 @@ library Errors {
     error ParamsInvalid();
     error NotExpired();
 
-    error ToProfileLimitExceeded();
+    error ToCuratorLimitExceeded();
     error DurationLimitExceeded();
     error BidTypeNotAccept();
     error NotReachedMinimum();

@@ -127,7 +127,7 @@ makeSuiteCleanRoom('TakoLensHub', () => {
             bidToken: ADDRESS_ZERO,
             bidAmount: BID_AMOUNT,
             duration: DAY * maxDuration + DAY,
-            toProfiles: [1],
+            toCurators: [1],
           },
           0,
           getMerkleBaseData()
@@ -135,15 +135,15 @@ makeSuiteCleanRoom('TakoLensHub', () => {
       ).to.revertedWith(ERRORS.DURATION_LIMIT_EXCEEDED);
     });
     it('Should fail to bid if the to profile limit exceeded', async () => {
-      const toProfiles = [];
+      const toCurators = [];
       for (let i = 0; i < 10; i++) {
-        toProfiles.push(i);
+        toCurators.push(i);
       }
       await expect(
         takoLensHub
           .connect(user)
-          .bid(getBidBaseParams(toProfiles), 0, getMerkleBaseData())
-      ).to.revertedWith(ERRORS.TO_PROFILE_LIMIT_EXCEEDED);
+          .bid(getBidBaseParams(toCurators), 0, getMerkleBaseData())
+      ).to.revertedWith(ERRORS.TO_CURATOR_LIMIT_EXCEEDED);
     });
     it('Should fail to bid if the amount not reached minimum', async () => {
       await expect(
@@ -176,7 +176,7 @@ makeSuiteCleanRoom('TakoLensHub', () => {
             bidToken: erc20Token.address,
             bidAmount: BID_AMOUNT,
             duration: DAY,
-            toProfiles: [1],
+            toCurators: [1],
           },
           0,
           getMerkleBaseData()
@@ -391,7 +391,7 @@ makeSuiteCleanRoom('TakoLensHub', () => {
             bidToken: ADDRESS_ZERO,
             bidAmount: BID_AMOUNT,
             duration: DAY * maxDuration + DAY,
-            toProfiles: [1],
+            toCurators: [1],
           },
           0,
           getMerkleBaseData()
@@ -399,15 +399,15 @@ makeSuiteCleanRoom('TakoLensHub', () => {
       ).to.revertedWith(ERRORS.DURATION_LIMIT_EXCEEDED);
     });
     it('Should fail to bid if the to profile limit exceeded', async () => {
-      const toProfiles = [];
+      const toCurators = [];
       for (let i = 0; i < 10; i++) {
-        toProfiles.push(i);
+        toCurators.push(i);
       }
       await expect(
         takoLensHub
           .connect(user)
-          .bidMomoka(getBidMomokaBaseParams(toProfiles), 0, getMerkleBaseData())
-      ).to.revertedWith(ERRORS.TO_PROFILE_LIMIT_EXCEEDED);
+          .bidMomoka(getBidMomokaBaseParams(toCurators), 0, getMerkleBaseData())
+      ).to.revertedWith(ERRORS.TO_CURATOR_LIMIT_EXCEEDED);
     });
     it('Should fail to bid if the amount not reached minimum', async () => {
       await expect(
@@ -440,7 +440,7 @@ makeSuiteCleanRoom('TakoLensHub', () => {
             bidToken: erc20Token.address,
             bidAmount: BID_AMOUNT,
             duration: DAY,
-            toProfiles: [1],
+            toCurators: [1],
           },
           0,
           getMerkleBaseData()
@@ -696,7 +696,7 @@ async function initMomokaBid() {
   ).to.not.reverted;
 }
 
-function getBidBaseParams(toProfiles: number[] = [1]) {
+function getBidBaseParams(toCurators: number[] = [1]) {
   return {
     contentURI: '',
     profileIdPointed: 1,
@@ -704,11 +704,11 @@ function getBidBaseParams(toProfiles: number[] = [1]) {
     bidToken: ADDRESS_ZERO,
     bidAmount: BID_AMOUNT,
     duration: DAY,
-    toProfiles: toProfiles,
+    toCurators: toCurators,
   };
 }
 
-function getBidMomokaBaseParams(toProfiles: number[] = [1]) {
+function getBidMomokaBaseParams(toCurators: number[] = [1]) {
   return {
     contentURI: '',
     mirror: '',
@@ -716,7 +716,7 @@ function getBidMomokaBaseParams(toProfiles: number[] = [1]) {
     bidToken: ADDRESS_ZERO,
     bidAmount: BID_AMOUNT,
     duration: DAY,
-    toProfiles: toProfiles,
+    toCurators: toCurators,
   };
 }
 

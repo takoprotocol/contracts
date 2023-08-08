@@ -7,7 +7,7 @@ export const ERRORS = {
   WRONG_AMOUNT: 'WrongAmount',
   PARAMS_INVALID: 'ParamsInvalid',
   NOT_EXPIRED: 'NotExpired',
-  TO_PROFILE_LIMIT_EXCEEDED: 'ToProfileLimitExceeded',
+  TO_CURATOR_LIMIT_EXCEEDED: 'ToCuratorLimitExceeded',
   DURATION_LIMIT_EXCEEDED: 'DurationLimitExceeded',
   BID_TYPE_NOT_ACCEPT: 'BidTypeNotAccept',
   NOT_REACHED_MINIMUM: 'NotReachedMinimum',

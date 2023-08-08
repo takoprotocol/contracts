@@ -30,7 +30,7 @@ contract TakoLensHub is Ownable {
         address bidToken;
         uint256 bidAmount;
         uint256 duration;
-        uint256[] toProfiles;
+        uint256[] toCurators;
     }
 
     struct Content {
@@ -41,9 +41,9 @@ contract TakoLensHub is Ownable {
         address bidAddress;
         uint256 bidAmount;
         uint256 bidExpires;
-        uint256[] toProfiles;
-        uint256 curatorProfileId;
-        uint256 curatorPubId;
+        uint256[] toCurators;
+        uint256 curatorId;
+        uint256 curatorContentId;
         DataTypes.AuditStatus status;
         BidType bidType;
     }
@@ -55,7 +55,7 @@ contract TakoLensHub is Ownable {
         address bidToken;
         uint256 bidAmount;
         uint256 duration;
-        uint256[] toProfiles;
+        uint256[] toCurators;
     }
 
     struct MomokaContent {
@@ -66,9 +66,9 @@ contract TakoLensHub is Ownable {
         address bidAddress;
         uint256 bidAmount;
         uint256 bidExpires;
-        uint256[] toProfiles;
-        uint256 curatorProfileId;
-        string curatorPubId;
+        uint256[] toCurators;
+        uint256 curatorId;
+        string curatorContentId;
         DataTypes.AuditStatus status;
         BidType bidType;
     }
@@ -80,7 +80,7 @@ contract TakoLensHub is Ownable {
             "LoanWithSig(uint256 index,address curator,string contentId,uint256 deadline)"
         );
 
-    uint8 public maxToProfileCounter = 5;
+    uint8 public maxToCuratorCounter = 5;
     uint256 public maxDuration = 14 days;
     address public feeCollector;
     uint256 public feeRate = 1 * 10 ** 8;
@@ -189,7 +189,7 @@ contract TakoLensHub is Ownable {
     }
 
     function setToProfileLimit(uint8 counter) external onlyGov {
-        maxToProfileCounter = counter;
+        maxToCuratorCounter = counter;
     }
 
     function setMaxDuration(uint256 max) external onlyGov {
@@ -309,7 +309,7 @@ contract TakoLensHub is Ownable {
 
     function auditBidPost(
         uint256 index,
-        uint256 profileId,
+        uint256 curatorId,
         DataTypes.EIP712Signature calldata sig
     ) external {
         _validateContentIndex(index);
@@ -324,10 +324,10 @@ contract TakoLensHub is Ownable {
         }
 
         _validateExpires(content.bidExpires);
-        _validateProfile(profileId, content.toProfiles);
+        _validateProfile(curatorId, content.toCurators);
 
         ILensHub.PostWithSigData memory lensData;
-        lensData.profileId = profileId;
+        lensData.profileId = curatorId;
         lensData.contentURI = content.contentURI;
         lensData.collectModule = LENS_FREE_COLLECT_MODULE;
         lensData.collectModuleInitData = abi.encode(false);
@@ -340,8 +340,8 @@ contract TakoLensHub is Ownable {
 
         _loan(content.bidToken, content.bidAmount);
 
-        content.curatorPubId = _postWithSign(lensData);
-        content.curatorProfileId = profileId;
+        content.curatorContentId = _postWithSign(lensData);
+        content.curatorId = curatorId;
         content.status = DataTypes.AuditStatus.Pass;
 
         _contentByIndex[index] = content;
@@ -351,7 +351,7 @@ contract TakoLensHub is Ownable {
 
     function auditBidMirror(
         uint256 index,
-        uint256 profileId,
+        uint256 curatorId,
         DataTypes.EIP712Signature calldata sig
     ) external {
         _validateContentIndex(index);
@@ -366,10 +366,10 @@ contract TakoLensHub is Ownable {
         }
 
         _validateExpires(content.bidExpires);
-        _validateProfile(profileId, content.toProfiles);
+        _validateProfile(curatorId, content.toCurators);
 
         ILensHub.MirrorWithSigData memory lensData;
-        lensData.profileId = profileId;
+        lensData.profileId = curatorId;
         lensData.profileIdPointed = content.profileIdPointed;
         lensData.pubIdPointed = content.pubIdPointed;
         lensData.sig = DataTypes.EIP712Signature(
@@ -381,8 +381,8 @@ contract TakoLensHub is Ownable {
 
         _loan(content.bidToken, content.bidAmount);
 
-        content.curatorPubId = _mirrorWithSign(lensData);
-        content.curatorProfileId = profileId;
+        content.curatorContentId = _mirrorWithSign(lensData);
+        content.curatorId = curatorId;
         content.status = DataTypes.AuditStatus.Pass;
 
         _contentByIndex[index] = content;
@@ -392,7 +392,7 @@ contract TakoLensHub is Ownable {
 
     function auditBidComment(
         uint256 index,
-        uint256 profileId,
+        uint256 curatorId,
         DataTypes.EIP712Signature calldata sig
     ) external {
         _validateContentIndex(index);
@@ -407,10 +407,10 @@ contract TakoLensHub is Ownable {
         }
 
         _validateExpires(content.bidExpires);
-        _validateProfile(profileId, content.toProfiles);
+        _validateProfile(curatorId, content.toCurators);
 
         ILensHub.CommentWithSigData memory lensData;
-        lensData.profileId = profileId;
+        lensData.profileId = curatorId;
         lensData.contentURI = content.contentURI;
         lensData.profileIdPointed = content.profileIdPointed;
         lensData.pubIdPointed = content.pubIdPointed;
@@ -425,8 +425,8 @@ contract TakoLensHub is Ownable {
 
         _loan(content.bidToken, content.bidAmount);
 
-        content.curatorPubId = _commentWithSign(lensData);
-        content.curatorProfileId = profileId;
+        content.curatorContentId = _commentWithSign(lensData);
+        content.curatorId = curatorId;
         content.status = DataTypes.AuditStatus.Pass;
 
         _contentByIndex[index] = content;
@@ -436,7 +436,7 @@ contract TakoLensHub is Ownable {
 
     function loanWithSig(
         uint256 index,
-        uint256 profileId,
+        uint256 curatorId,
         address relayer,
         string calldata contentId,
         DataTypes.EIP712Signature calldata sig
@@ -452,7 +452,7 @@ contract TakoLensHub is Ownable {
             revert Errors.BidIsClose();
         }
 
-        _validateProfile(profileId, content.toProfiles);
+        _validateProfile(curatorId, content.toCurators);
 
         SigUtils._validateRecoveredAddress(
             SigUtils._calculateDigest(
@@ -474,8 +474,8 @@ contract TakoLensHub is Ownable {
         _loan(content.bidToken, content.bidAmount);
 
         _momokaContentByIndex[index].status = DataTypes.AuditStatus.Pass;
-        _momokaContentByIndex[index].curatorProfileId = profileId;
-        _momokaContentByIndex[index].curatorPubId = contentId;
+        _momokaContentByIndex[index].curatorId = curatorId;
+        _momokaContentByIndex[index].curatorContentId = contentId;
 
         emit modifiBidMomokaEvent(index, _momokaContentByIndex[index]);
     }
@@ -550,14 +550,14 @@ contract TakoLensHub is Ownable {
         address token,
         uint256 amount,
         BidType bidType,
-        uint256[] memory toProfiles
+        uint256[] memory toCurators
     ) internal {
-        if (toProfiles.length > maxToProfileCounter) {
-            revert Errors.ToProfileLimitExceeded();
+        if (toCurators.length > maxToCuratorCounter) {
+            revert Errors.ToCuratorLimitExceeded();
         }
 
-        for (uint8 i = 0; i < toProfiles.length; i++) {
-            address profileOwner = ILensHub(LENS_HUB).ownerOf(toProfiles[i]);
+        for (uint8 i = 0; i < toCurators.length; i++) {
+            address profileOwner = ILensHub(LENS_HUB).ownerOf(toCurators[i]);
 
             if (amount < _minBidByTokenByWallet[profileOwner][token]) {
                 revert Errors.NotReachedMinimum();
@@ -572,20 +572,20 @@ contract TakoLensHub is Ownable {
 
     function _validateProfile(
         uint256 profileId,
-        uint256[] memory toProfiles
+        uint256[] memory toCurators
     ) internal {
         address profileOwner = ILensHub(LENS_HUB).ownerOf(profileId);
         if (profileOwner != _msgSender()) {
             revert Errors.NotProfileOwner();
         }
 
-        if (toProfiles.length == 0) {
+        if (toCurators.length == 0) {
             return;
         }
 
         bool flag;
-        for (uint8 i = 0; i < toProfiles.length; i++) {
-            if (toProfiles[i] == profileId) {
+        for (uint8 i = 0; i < toCurators.length; i++) {
+            if (toCurators[i] == profileId) {
                 flag = true;
                 break;
             }
@@ -640,7 +640,7 @@ contract TakoLensHub is Ownable {
             vars.bidToken,
             vars.bidAmount,
             bidType,
-            vars.toProfiles
+            vars.toCurators
         );
 
         uint256 counter = ++_bidCounter;
@@ -651,7 +651,7 @@ contract TakoLensHub is Ownable {
         content.bidAmount = vars.bidAmount;
         content.bidAddress = _msgSender();
         content.bidExpires = block.timestamp + vars.duration;
-        content.toProfiles = vars.toProfiles;
+        content.toCurators = vars.toCurators;
         content.bidType = bidType;
 
         if (bidType == BidType.Comment || bidType == BidType.Mirror) {
@@ -672,7 +672,7 @@ contract TakoLensHub is Ownable {
             vars.bidToken,
             vars.bidAmount,
             bidType,
-            vars.toProfiles
+            vars.toCurators
         );
 
         uint256 counter = ++_momokaBidCounter;
@@ -682,7 +682,7 @@ contract TakoLensHub is Ownable {
         content.bidAmount = vars.bidAmount;
         content.bidAddress = _msgSender();
         content.bidExpires = block.timestamp + vars.duration;
-        content.toProfiles = vars.toProfiles;
+        content.toCurators = vars.toCurators;
         content.bidType = bidType;
 
         if (bidType == BidType.Post) {
