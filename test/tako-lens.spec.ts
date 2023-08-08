@@ -346,7 +346,7 @@ makeSuiteCleanRoom('TakoLensHub', () => {
         [deployer, profileOwner, takoLensHub],
         [officialFee, BID_AMOUNT - officialFee, -BID_AMOUNT]
       );
-      expect((await takoLensHub.getContentByIndex(1)).state).to.eq(
+      expect((await takoLensHub.getContentByIndex(1)).status).to.eq(
         AuditStatus.Pass
       );
     });
@@ -358,7 +358,7 @@ makeSuiteCleanRoom('TakoLensHub', () => {
         [deployer, profileOwner, takoLensHub],
         [officialFee, BID_AMOUNT - officialFee, -BID_AMOUNT]
       );
-      expect((await takoLensHub.getContentByIndex(2)).state).to.eq(
+      expect((await takoLensHub.getContentByIndex(2)).status).to.eq(
         AuditStatus.Pass
       );
     });
@@ -370,7 +370,7 @@ makeSuiteCleanRoom('TakoLensHub', () => {
         [deployer, profileOwner, takoLensHub],
         [officialFee, BID_AMOUNT - officialFee, -BID_AMOUNT]
       );
-      expect((await takoLensHub.getContentByIndex(3)).state).to.eq(
+      expect((await takoLensHub.getContentByIndex(3)).status).to.eq(
         AuditStatus.Pass
       );
     });
@@ -635,7 +635,7 @@ makeSuiteCleanRoom('TakoLensHub', () => {
         [deployer, profileOwner, takoLensHub],
         [officialFee, BID_AMOUNT - officialFee, -BID_AMOUNT]
       );
-      expect((await takoLensHub.getMomokaContentByIndex(1)).state).to.eq(
+      expect((await takoLensHub.getMomokaContentByIndex(1)).status).to.eq(
         AuditStatus.Pass
       );
     });
