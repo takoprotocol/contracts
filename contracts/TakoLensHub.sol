@@ -242,6 +242,9 @@ contract TakoLensHub is Ownable {
         _validateContentIndex(index);
 
         Content memory content = _contentByIndex[index];
+        if (content.status != DataTypes.AuditStatus.Pending) {
+            revert Errors.BidIsClose();
+        }
 
         _fetchBidToken(content.bidToken, amount);
 
@@ -260,6 +263,9 @@ contract TakoLensHub is Ownable {
         _validateMomokaContentIndex(index);
 
         MomokaContent memory content = _momokaContentByIndex[index];
+        if (content.status != DataTypes.AuditStatus.Pending) {
+            revert Errors.BidIsClose();
+        }
 
         _fetchBidToken(content.bidToken, amount);
 
