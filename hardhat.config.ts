@@ -51,6 +51,9 @@ const config: HardhatUserConfig = {
       gas: 'auto',
       gasPrice: 'auto',
     },
+    dashboard: {
+      url: 'http://127.0.0.1:24012/rpc',
+    },
     hardhat: {
       chainId: HARDHATEVM_CHAINID,
       accounts: TEST_ACCOUNTS.map(

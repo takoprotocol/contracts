@@ -55,7 +55,7 @@ makeSuiteCleanRoom('TakoLensHub', () => {
       ).to.be.reverted;
     });
     it('Should fail to set profile limit if sender does not own the contract', async () => {
-      await expect(takoLensHub.connect(user).setToProfileLimit(20)).to.reverted;
+      await expect(takoLensHub.connect(user).setToCuratorLimit(20)).to.reverted;
     });
     // it('Should success to set whitelist token', async () => {
     //   await expect(
@@ -84,7 +84,7 @@ makeSuiteCleanRoom('TakoLensHub', () => {
       ).to.not.reverted;
     });
     it('Should success to set profile limit', async () => {
-      await expect(takoLensHub.connect(deployer).setToProfileLimit(20)).to.not
+      await expect(takoLensHub.connect(deployer).setToCuratorLimit(20)).to.not
         .reverted;
     });
   });
