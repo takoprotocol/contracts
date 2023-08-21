@@ -6,7 +6,8 @@ export async function getLoanWithSigParts(
   curator: string,
   contentId: string,
   deadline: number,
-  verifyingContract: string
+  verifyingContract: string,
+  name = 'Tako Lens Hub'
 ) {
   const msgParams = {
     types: {
@@ -17,7 +18,7 @@ export async function getLoanWithSigParts(
         { name: 'deadline', type: 'uint256' },
       ],
     },
-    domain: domain(verifyingContract),
+    domain: domain(verifyingContract, name),
     value: {
       index,
       curator,
@@ -33,14 +34,57 @@ export async function getLoanWithSigParts(
   return hre.ethers.utils.splitSignature(sig);
 }
 
-function domain(verifyingContract: string): {
+export async function getVerifiedCuratorsData(
+  curatorIds: number[],
+  curators: string[],
+  deadline: number,
+  verifyingContract: string
+) {
+  const msgParams = {
+    types: {
+      VerifiedCurators: [
+        { name: 'curatorIds', type: 'uint256[]' },
+        { name: 'curators', type: 'address[]' },
+        { name: 'deadline', type: 'uint256' },
+      ],
+    },
+    domain: domain(verifyingContract, 'Tako Farcaster Hub'),
+    value: {
+      curatorIds,
+      curators,
+      deadline,
+    },
+  };
+  const sig = await testWallet._signTypedData(
+    msgParams.domain,
+    msgParams.types,
+    msgParams.value
+  );
+  const splitSignature = hre.ethers.utils.splitSignature(sig);
+  return {
+    curatorIds,
+    curators,
+    relayer: testWallet.address,
+    sig: {
+      v: splitSignature.v,
+      r: splitSignature.r,
+      s: splitSignature.s,
+      deadline,
+    },
+  };
+}
+
+function domain(
+  verifyingContract: string,
+  name: string
+): {
   name: string;
   version: string;
   chainId: number;
   verifyingContract: string;
 } {
   return {
-    name: 'Tako Lens Hub',
+    name,
     version: '1',
     chainId: hre.network.config.chainId || 0,
     verifyingContract: verifyingContract,

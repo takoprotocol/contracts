@@ -7,7 +7,7 @@ import {
   revertToSnapshot,
   takeSnapshot,
 } from './shared/utils';
-import { TakoLensHub, ERC20Token } from '../typechain-types';
+import { TakoLensHub, ERC20Token, TakoFarcasterHub } from '../typechain-types';
 import { FakeContract, smock } from '@defi-wonderland/smock';
 import { LensHubAbi, lensFreeCollectModuleAbi } from './shared/abis';
 
@@ -24,6 +24,7 @@ export let relayer: Signer;
 export let lensHubMock: FakeContract<BaseContract>;
 export let lensFreeCollectModule: FakeContract<BaseContract>;
 export let takoLensHub: TakoLensHub;
+export let takoFarcasterHub: TakoFarcasterHub;
 export let erc20Token: ERC20Token;
 
 export function makeSuiteCleanRoom(name: string, tests: () => void) {
@@ -58,6 +59,9 @@ async function initAccount() {
 async function initContract() {
   await initLensHubMock();
   const takoLensHubFactory = await hre.ethers.getContractFactory('TakoLensHub');
+  const takoFarcasterHubFactory = await hre.ethers.getContractFactory(
+    'TakoFarcasterHub'
+  );
   const erc20TokenFactory = await hre.ethers.getContractFactory('ERC20Token');
 
   takoLensHub = (await takoLensHubFactory
@@ -67,6 +71,9 @@ async function initContract() {
       lensFreeCollectModule.address,
       ethers.constants.HashZero
     )) as TakoLensHub;
+  takoFarcasterHub = (await takoFarcasterHubFactory
+    .connect(deployer)
+    .deploy(ethers.constants.HashZero)) as TakoFarcasterHub;
   erc20Token = (await erc20TokenFactory
     .connect(deployer)
     .deploy()) as ERC20Token;
