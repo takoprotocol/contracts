@@ -1,4 +1,4 @@
-import { expect } from "chai";
+import { expect } from 'chai';
 import {
   deployer,
   makeSuiteCleanRoom,
@@ -8,15 +8,15 @@ import {
   user1,
   users,
   takoFarcasterHub,
-} from "./__setup.spec";
-import { ERRORS } from "./helpers/errors";
+} from './__setup.spec';
+import { ERRORS } from './helpers/errors';
 import {
   ADDRESS_ZERO,
   AuditStatus,
   EVMMine,
   EVMIncreaseTime,
-} from "./shared/utils";
-import { getLoanWithSigParts, getVerifiedCuratorsData } from "./shared/sign";
+} from './shared/utils';
+import { getLoanWithSigParts, getVerifiedCuratorsData } from './shared/sign';
 
 const BID_AMOUNT = 100000;
 const DAY = 86400;
@@ -26,74 +26,74 @@ let fidOwner = users[0];
 let fidOwner1 = users[1];
 let relayer = testWallet;
 const fid = 1;
-const contentBaseId = "0x1";
+const contentBaseId = '0x1';
 
-makeSuiteCleanRoom("TakoFarcasterHub", () => {
-  context("Gov", () => {
+makeSuiteCleanRoom('TakoFarcasterHub', () => {
+  context('Gov', () => {
     beforeEach(async () => {
       await init();
     });
-    it("Should fail to set whitelist token if sender does not own the contract", async () => {
+    it('Should fail to set whitelist token if sender does not own the contract', async () => {
       await expect(
         takoFarcasterHub.connect(user).whitelistBidToken(ADDRESS_ZERO, true)
       ).to.be.reverted;
     });
-    it("Should fail to set whitelist relayer if sender does not own the contract", async () => {
+    it('Should fail to set whitelist relayer if sender does not own the contract', async () => {
       await expect(
         takoFarcasterHub
           .connect(user)
           .whitelistBidToken(await user1.getAddress(), true)
       ).to.be.reverted;
     });
-    it("Should fail to set fee collector if sender does not own the contract", async () => {
+    it('Should fail to set fee collector if sender does not own the contract', async () => {
       await expect(
         takoFarcasterHub
           .connect(user)
           .setFeeCollector(deployer.getAddress(), 100000000)
       ).to.be.reverted;
     });
-    it("Should fail to set profile limit if sender does not own the contract", async () => {
+    it('Should fail to set profile limit if sender does not own the contract', async () => {
       await expect(takoFarcasterHub.connect(user).setToCuratorLimit(20)).to
         .reverted;
     });
-    it("Should success to set whitelist token", async () => {
+    it('Should success to set whitelist token', async () => {
       await expect(
         takoFarcasterHub
           .connect(deployer)
           .whitelistBidToken(erc20Token.address, true)
       ).to.not.reverted;
     });
-    it("Should success to set whitelist relayer", async () => {
+    it('Should success to set whitelist relayer', async () => {
       await expect(
         takoFarcasterHub
           .connect(deployer)
           .whitelistBidToken(await user.getAddress(), true)
       ).to.not.reverted;
     });
-    it("Should success to set fee collector", async () => {
+    it('Should success to set fee collector', async () => {
       await expect(
         takoFarcasterHub
           .connect(deployer)
           .setFeeCollector(deployer.getAddress(), 100000000)
       ).to.not.reverted;
     });
-    it("Should success to set profile limit", async () => {
+    it('Should success to set profile limit', async () => {
       await expect(takoFarcasterHub.connect(deployer).setToCuratorLimit(20)).to
         .not.reverted;
     });
   });
 
-  context("User bid", () => {
+  context('User bid', () => {
     beforeEach(async () => {
       await init();
     });
-    it("Should fail to bid if the duration limit exceeded", async () => {
+    it('Should fail to bid if the duration limit exceeded', async () => {
       const maxDuration = (await takoFarcasterHub.maxDuration()).toNumber();
       await expect(
         takoFarcasterHub.connect(user).bid(
           {
-            contentURI: "",
-            parentHash: "",
+            contentURI: '',
+            parentHash: '',
             bidToken: ADDRESS_ZERO,
             bidAmount: BID_AMOUNT,
             duration: DAY * maxDuration + DAY,
@@ -101,11 +101,14 @@ makeSuiteCleanRoom("TakoFarcasterHub", () => {
           },
           0,
           await getVerifiedCurators(),
-          getMerkleBaseData()
+          getMerkleBaseData(),
+          {
+            value: BID_AMOUNT,
+          }
         )
       ).to.revertedWith(ERRORS.DURATION_LIMIT_EXCEEDED);
     });
-    it("Should fail to bid if the to profile limit exceeded", async () => {
+    it('Should fail to bid if the to profile limit exceeded', async () => {
       const toCurators = [];
       for (let i = 0; i < 10; i++) {
         toCurators.push(i);
@@ -117,11 +120,14 @@ makeSuiteCleanRoom("TakoFarcasterHub", () => {
             getBidBaseParams(toCurators),
             0,
             await getVerifiedCurators(),
-            getMerkleBaseData()
+            getMerkleBaseData(),
+            {
+              value: BID_AMOUNT,
+            }
           )
       ).to.revertedWith(ERRORS.TO_CURATOR_LIMIT_EXCEEDED);
     });
-    it("Should fail to bid if the amount not reached minimum", async () => {
+    it('Should fail to bid if the amount not reached minimum', async () => {
       await expect(
         takoFarcasterHub
           .connect(fidOwner)
@@ -141,7 +147,7 @@ makeSuiteCleanRoom("TakoFarcasterHub", () => {
           )
       ).to.revertedWith(ERRORS.NOT_REACHED_MINIMUM);
     });
-    it("Should fail to bid if insufficient input amount", async () => {
+    it('Should fail to bid if insufficient input amount', async () => {
       await expect(
         takoFarcasterHub
           .connect(user)
@@ -156,12 +162,12 @@ makeSuiteCleanRoom("TakoFarcasterHub", () => {
           )
       ).to.revertedWith(ERRORS.INSUFFICIENT_INPUT_AMOUNT);
     });
-    it("Should fail to bid if the bid token not whitelisted", async () => {
+    it('Should fail to bid if the bid token not whitelisted', async () => {
       await expect(
         takoFarcasterHub.connect(user).bid(
           {
-            contentURI: "",
-            parentHash: "",
+            contentURI: '',
+            parentHash: '',
             bidToken: erc20Token.address,
             bidAmount: BID_AMOUNT,
             duration: DAY,
@@ -173,7 +179,7 @@ makeSuiteCleanRoom("TakoFarcasterHub", () => {
         )
       ).to.revertedWith(ERRORS.BID_TOKEN_NOT_WHITELISTED);
     });
-    it("Should fail to bid if the bid type not allowed", async () => {
+    it('Should fail to bid if the bid type not allowed', async () => {
       await expect(
         takoFarcasterHub
           .connect(fidOwner)
@@ -193,7 +199,7 @@ makeSuiteCleanRoom("TakoFarcasterHub", () => {
           )
       ).to.revertedWith(ERRORS.BID_TYPE_NOT_ACCEPT);
     });
-    it("Should success to bid cast", async () => {
+    it('Should success to bid cast', async () => {
       await expect(
         takoFarcasterHub
           .connect(user)
@@ -209,7 +215,7 @@ makeSuiteCleanRoom("TakoFarcasterHub", () => {
       ).to.not.reverted;
       expect(await takoFarcasterHub.getBidCounter()).to.eq(1);
     });
-    it("Should success to bid reply", async () => {
+    it('Should success to bid reply', async () => {
       await expect(
         takoFarcasterHub
           .connect(user)
@@ -225,7 +231,7 @@ makeSuiteCleanRoom("TakoFarcasterHub", () => {
       ).to.not.reverted;
       expect(await takoFarcasterHub.getBidCounter()).to.eq(1);
     });
-    it("Should success to bid recast", async () => {
+    it('Should success to bid recast', async () => {
       await expect(
         takoFarcasterHub
           .connect(user)
@@ -243,23 +249,23 @@ makeSuiteCleanRoom("TakoFarcasterHub", () => {
     });
   });
 
-  context("User update bid", () => {
+  context('User update bid', () => {
     beforeEach(async () => {
       await init();
       await initBid();
     });
-    it("Should fail to update bid if the duration limit exceeded", async () => {
+    it('Should fail to update bid if the duration limit exceeded', async () => {
       const maxDuration = (await takoFarcasterHub.maxDuration()).toNumber();
       await expect(
         takoFarcasterHub.connect(user).updateBid(1, DAY * maxDuration + DAY, 0)
       ).to.revertedWith(ERRORS.DURATION_LIMIT_EXCEEDED);
     });
-    it("Should fail to update bid if index error", async () => {
+    it('Should fail to update bid if index error', async () => {
       await expect(
         takoFarcasterHub.connect(user).updateBid(4, DAY, 0)
       ).to.revertedWith(ERRORS.PARAMS_INVALID);
     });
-    it("Should fail to update bid if bid is closed", async () => {
+    it('Should fail to update bid if bid is closed', async () => {
       await expect(
         takoFarcasterHub
           .connect(fidOwner)
@@ -278,21 +284,21 @@ makeSuiteCleanRoom("TakoFarcasterHub", () => {
           .updateBid(1, DAY, BID_AMOUNT, { value: BID_AMOUNT })
       ).to.revertedWith(ERRORS.BID_IS_CLOSE);
     });
-    it("Should fail to update bid if not bidder", async () => {
+    it('Should fail to update bid if not bidder', async () => {
       await expect(
         takoFarcasterHub
           .connect(user1)
           .updateBid(1, DAY, BID_AMOUNT, { value: BID_AMOUNT })
       ).to.revertedWith(ERRORS.NOT_BIDDER);
     });
-    it("Should fail to update bid if insufficient input amount", async () => {
+    it('Should fail to update bid if insufficient input amount', async () => {
       await expect(
         takoFarcasterHub
           .connect(user)
           .updateBid(1, DAY, BID_AMOUNT, { value: BID_AMOUNT - 1 })
       ).to.revertedWith(ERRORS.INSUFFICIENT_INPUT_AMOUNT);
     });
-    it("Should success to update bid", async () => {
+    it('Should success to update bid', async () => {
       await expect(
         takoFarcasterHub
           .connect(user)
@@ -301,27 +307,27 @@ makeSuiteCleanRoom("TakoFarcasterHub", () => {
     });
   });
 
-  context("User cancel bid", () => {
+  context('User cancel bid', () => {
     beforeEach(async () => {
       await init();
       await initBid();
     });
-    it("Should fail to cancel bid if index error", async () => {
+    it('Should fail to cancel bid if index error', async () => {
       await expect(
         takoFarcasterHub.connect(user).claimBackBid(10)
       ).to.revertedWith(ERRORS.PARAMS_INVALID);
     });
-    it("Should fail to cancel bid if not bidder", async () => {
+    it('Should fail to cancel bid if not bidder', async () => {
       await expect(
         takoFarcasterHub.connect(user1).claimBackBid(1)
       ).to.revertedWith(ERRORS.NOT_BIDDER);
     });
-    it("Should fail to cancel bid if not expired", async () => {
+    it('Should fail to cancel bid if not expired', async () => {
       await expect(
         takoFarcasterHub.connect(user).claimBackBid(1)
       ).to.revertedWith(ERRORS.NOT_EXPIRED);
     });
-    it("Should fail to cancel bid if bid closed", async () => {
+    it('Should fail to cancel bid if bid closed', async () => {
       await expect(
         takoFarcasterHub
           .connect(fidOwner)
@@ -340,7 +346,7 @@ makeSuiteCleanRoom("TakoFarcasterHub", () => {
         takoFarcasterHub.connect(user).claimBackBid(1)
       ).to.revertedWith(ERRORS.BID_IS_CLOSE);
     });
-    it("Should success to cancel bid", async () => {
+    it('Should success to cancel bid', async () => {
       await EVMIncreaseTime(DAY * 2);
       await EVMMine();
       await expect(
@@ -358,12 +364,12 @@ makeSuiteCleanRoom("TakoFarcasterHub", () => {
     });
   });
 
-  context("Loan", async () => {
+  context('Loan', async () => {
     beforeEach(async () => {
       await init();
       await initBid();
     });
-    it("Should fail to loan if the index error", async () => {
+    it('Should fail to loan if the index error', async () => {
       await expect(
         takoFarcasterHub
           .connect(fidOwner)
@@ -377,7 +383,7 @@ makeSuiteCleanRoom("TakoFarcasterHub", () => {
           )
       ).to.revertedWith(ERRORS.PARAMS_INVALID);
     });
-    it("Should fail to loan if the bid is close", async () => {
+    it('Should fail to loan if the bid is close', async () => {
       await EVMIncreaseTime(DAY * 2);
       await EVMMine();
       await expect(takoFarcasterHub.connect(user).claimBackBid(1)).to.not
@@ -395,7 +401,7 @@ makeSuiteCleanRoom("TakoFarcasterHub", () => {
           )
       ).to.revertedWith(ERRORS.BID_IS_CLOSE);
     });
-    it("Should fail to loan if the profile error", async () => {
+    it('Should fail to loan if the profile error', async () => {
       await expect(
         takoFarcasterHub
           .connect(fidOwner1)
@@ -409,7 +415,7 @@ makeSuiteCleanRoom("TakoFarcasterHub", () => {
           )
       ).to.revertedWith(ERRORS.NOT_PROFILE_OWNER);
     });
-    it("Should fail to loan if the sig error", async () => {
+    it('Should fail to loan if the sig error', async () => {
       await expect(
         takoFarcasterHub
           .connect(fidOwner)
@@ -423,7 +429,7 @@ makeSuiteCleanRoom("TakoFarcasterHub", () => {
           )
       ).to.reverted;
     });
-    it("Should success to loan with sig", async () => {
+    it('Should success to loan with sig', async () => {
       const officialFee = (BID_AMOUNT * officialFeeRate) / FEE_DENOMINATOR;
       await expect(
         takoFarcasterHub
@@ -504,8 +510,8 @@ async function initBid() {
 
 function getBidBaseParams(toCurators = [fid]) {
   return {
-    contentURI: "",
-    parentHash: "",
+    contentURI: '',
+    parentHash: '',
     bidToken: ADDRESS_ZERO,
     bidAmount: BID_AMOUNT,
     duration: DAY,
@@ -545,7 +551,7 @@ async function getLoanWithSigData(
     contentId,
     deadline,
     takoFarcasterHub.address,
-    "Tako Farcaster Hub"
+    'Tako Farcaster Hub'
   );
   return {
     v,

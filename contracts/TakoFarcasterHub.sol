@@ -110,11 +110,8 @@ contract TakoFarcasterHub is Ownable {
         address newsFeeCollector,
         uint256 newFeeRate
     ) external onlyOwner {
-        require(
-            newsFeeCollector != address(0),
-            "feeCollector address cannot be zero"
-        );
-        require(newFeeRate <= FEE_DENOMINATOR, "new fee rate exceeds maximum");
+        if (newsFeeCollector == address(0)) revert Errors.AddressCanNotBeZero();
+        if (newFeeRate > FEE_DENOMINATOR) revert Errors.RateExceedsMaximum();
         feeRate = newFeeRate;
         feeCollector = newsFeeCollector;
     }
@@ -136,7 +133,7 @@ contract TakoFarcasterHub is Ownable {
         address relayer,
         bool whitelist
     ) external onlyGov {
-        require(relayer != address(0), "relayer address cannot be zero");
+        if (relayer == address(0)) revert Errors.AddressCanNotBeZero();
         _relayerWhitelisted[relayer] = whitelist;
     }
 
@@ -156,6 +153,7 @@ contract TakoFarcasterHub is Ownable {
         DataTypes.MerkleVerifyData calldata verifyData
     ) external payable onlyWhitelisted(verifyData) {
         _validateCuratorsSigData(verifiedCuratorsData);
+        _fetchBidToken(vars.bidToken, vars.bidAmount);
         _bid(vars, bidType);
     }
 
@@ -165,9 +163,18 @@ contract TakoFarcasterHub is Ownable {
         VerifiedCuratorsData calldata verifiedCuratorsData,
         DataTypes.MerkleVerifyData calldata verifyData
     ) external payable onlyWhitelisted(verifyData) {
+        uint256 assetAmounts;
         _validateCuratorsSigData(verifiedCuratorsData);
         for (uint256 i = 0; i < vars.length; i++) {
             _bid(vars[i], bidType[i]);
+            if (vars[i].bidToken == address(0)) {
+                assetAmounts += vars[i].bidAmount;
+            } else {
+                _fetchBidToken(vars[i].bidToken, vars[i].bidAmount);
+            }
+        }
+        if (assetAmounts > 0) {
+            _fetchBidToken(address(0), assetAmounts);
         }
     }
 
@@ -317,12 +324,12 @@ contract TakoFarcasterHub is Ownable {
         }
     }
 
-    function _validateBidAndGetToken(
+    function _validateBid(
         address token,
         uint256 amount,
         BidType bidType,
         uint256[] memory toCurators
-    ) internal {
+    ) internal view {
         if (toCurators.length > maxToCuratorCounter) {
             revert Errors.ToCuratorLimitExceeded();
         }
@@ -338,8 +345,6 @@ contract TakoFarcasterHub is Ownable {
                 revert Errors.BidTypeNotAccept();
             }
         }
-
-        _fetchBidToken(token, amount);
     }
 
     function _validateCurator(
@@ -421,12 +426,7 @@ contract TakoFarcasterHub is Ownable {
     function _bid(BidData calldata vars, BidType bidType) internal {
         _validateDuration(vars.duration);
 
-        _validateBidAndGetToken(
-            vars.bidToken,
-            vars.bidAmount,
-            bidType,
-            vars.toCurators
-        );
+        _validateBid(vars.bidToken, vars.bidAmount, bidType, vars.toCurators);
 
         uint256 counter = ++_bidCounter;
         Content memory content;
