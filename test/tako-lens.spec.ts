@@ -130,7 +130,8 @@ makeSuiteCleanRoom('TakoLensHub', () => {
             toCurators: [1],
           },
           0,
-          getMerkleBaseData()
+          getMerkleBaseData(),
+          { value: BID_AMOUNT }
         )
       ).to.revertedWith(ERRORS.DURATION_LIMIT_EXCEEDED);
     });
@@ -142,7 +143,9 @@ makeSuiteCleanRoom('TakoLensHub', () => {
       await expect(
         takoLensHub
           .connect(user)
-          .bid(getBidBaseParams(toCurators), 0, getMerkleBaseData())
+          .bid(getBidBaseParams(toCurators), 0, getMerkleBaseData(), {
+            value: BID_AMOUNT,
+          })
       ).to.revertedWith(ERRORS.TO_CURATOR_LIMIT_EXCEEDED);
     });
     it('Should fail to bid if the amount not reached minimum', async () => {
@@ -154,7 +157,9 @@ makeSuiteCleanRoom('TakoLensHub', () => {
       await expect(
         takoLensHub
           .connect(user)
-          .bid(getBidBaseParams(), 0, getMerkleBaseData())
+          .bid(getBidBaseParams(), 0, getMerkleBaseData(), {
+            value: BID_AMOUNT,
+          })
       ).to.revertedWith(ERRORS.NOT_REACHED_MINIMUM);
     });
     it('Should fail to bid if insufficient input amount', async () => {
@@ -254,6 +259,41 @@ makeSuiteCleanRoom('TakoLensHub', () => {
     });
   });
 
+  context('User bid batch evm', () => {
+    beforeEach(async () => {
+      await init();
+    });
+    it('Should fail to bid batch if insufficient input amount', async () => {
+      await expect(
+        takoLensHub
+          .connect(user)
+          .bidBatch(
+            [getBidBaseParams(), getBidBaseParams()],
+            [0, 0],
+            getMerkleBaseData(),
+            {
+              value: BID_AMOUNT,
+            }
+          )
+      ).to.revertedWith(ERRORS.INSUFFICIENT_INPUT_AMOUNT);
+    });
+    it('Should success to bid batch', async () => {
+      await expect(
+        takoLensHub
+          .connect(user)
+          .bidBatch(
+            [getBidBaseParams(), getBidBaseParams()],
+            [0, 0],
+            getMerkleBaseData(),
+            {
+              value: BID_AMOUNT * 2,
+            }
+          )
+      ).to.not.reverted;
+      expect(await takoLensHub.getBidCounter()).to.eq(2);
+    });
+  });
+
   context('User update bid evm', () => {
     beforeEach(async () => {
       await init();
@@ -262,6 +302,9 @@ makeSuiteCleanRoom('TakoLensHub', () => {
     it('Should success to update bid', async () => {
       await expect(takoLensHub.connect(user).updateBid(1, 1, 1, { value: 1 }))
         .to.not.reverted;
+      expect((await takoLensHub.getContentByIndex(1)).bidAmount).to.eq(
+        BID_AMOUNT + 1
+      );
     });
   });
 
@@ -394,7 +437,8 @@ makeSuiteCleanRoom('TakoLensHub', () => {
             toCurators: [1],
           },
           0,
-          getMerkleBaseData()
+          getMerkleBaseData(),
+          { value: BID_AMOUNT }
         )
       ).to.revertedWith(ERRORS.DURATION_LIMIT_EXCEEDED);
     });
@@ -406,7 +450,12 @@ makeSuiteCleanRoom('TakoLensHub', () => {
       await expect(
         takoLensHub
           .connect(user)
-          .bidMomoka(getBidMomokaBaseParams(toCurators), 0, getMerkleBaseData())
+          .bidMomoka(
+            getBidMomokaBaseParams(toCurators),
+            0,
+            getMerkleBaseData(),
+            { value: BID_AMOUNT }
+          )
       ).to.revertedWith(ERRORS.TO_CURATOR_LIMIT_EXCEEDED);
     });
     it('Should fail to bid if the amount not reached minimum', async () => {
@@ -418,7 +467,9 @@ makeSuiteCleanRoom('TakoLensHub', () => {
       await expect(
         takoLensHub
           .connect(user)
-          .bidMomoka(getBidMomokaBaseParams(), 0, getMerkleBaseData())
+          .bidMomoka(getBidMomokaBaseParams(), 0, getMerkleBaseData(), {
+            value: BID_AMOUNT,
+          })
       ).to.revertedWith(ERRORS.NOT_REACHED_MINIMUM);
     });
     it('Should fail to bid if insufficient input amount', async () => {
@@ -490,6 +541,41 @@ makeSuiteCleanRoom('TakoLensHub', () => {
           })
       ).to.not.reverted;
       expect(await takoLensHub.getMomokaBidCounter()).to.eq(1);
+    });
+  });
+
+  context('User bid batch momoka', () => {
+    beforeEach(async () => {
+      await init();
+    });
+    it('Should fail to bid batch if insufficient input amount', async () => {
+      await expect(
+        takoLensHub
+          .connect(user)
+          .bidMomokaBatch(
+            [getBidMomokaBaseParams(), getBidMomokaBaseParams()],
+            [0, 0],
+            getMerkleBaseData(),
+            {
+              value: BID_AMOUNT,
+            }
+          )
+      ).to.revertedWith(ERRORS.INSUFFICIENT_INPUT_AMOUNT);
+    });
+    it('Should success to bid batch', async () => {
+      await expect(
+        takoLensHub
+          .connect(user)
+          .bidMomokaBatch(
+            [getBidMomokaBaseParams(), getBidMomokaBaseParams()],
+            [0, 0],
+            getMerkleBaseData(),
+            {
+              value: BID_AMOUNT * 2,
+            }
+          )
+      ).to.not.reverted;
+      expect(await takoLensHub.getMomokaBidCounter()).to.eq(2);
     });
   });
 

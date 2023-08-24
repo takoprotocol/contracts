@@ -9,8 +9,9 @@ import "./libraries/SigUtils.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-contract TakoFarcasterHub is Ownable {
+contract TakoFarcasterHub is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     enum BidType {
@@ -117,6 +118,7 @@ contract TakoFarcasterHub is Ownable {
     }
 
     function setGovernance(address gov, bool whitelist) external onlyOwner {
+        if (gov == address(0)) revert Errors.AddressCanNotBeZero();
         _governances[gov] = whitelist;
     }
 
@@ -186,7 +188,7 @@ contract TakoFarcasterHub is Ownable {
         _validateDuration(duration);
         _validateContentIndex(index);
 
-        Content memory content = _contentByIndex[index];
+        Content storage content = _contentByIndex[index];
         if (content.status != DataTypes.AuditStatus.Pending)
             revert Errors.BidIsClose();
         if (content.bidAddress != _msgSender()) revert Errors.NotBidder();
@@ -195,15 +197,16 @@ contract TakoFarcasterHub is Ownable {
 
         content.bidAmount += amount;
         content.bidExpires += duration;
-        _contentByIndex[index] = content;
         emit modifiBidEvent(index, content);
     }
 
-    function claimBackBid(uint256 index) external {
+    function claimBackBid(uint256 index) external nonReentrant {
         _claimBack(index);
     }
 
-    function claimBackBidBatch(uint256[] calldata indexArr) external {
+    function claimBackBidBatch(
+        uint256[] calldata indexArr
+    ) external nonReentrant {
         for (uint256 i = 0; i < indexArr.length; i++) {
             _claimBack(indexArr[i]);
         }
@@ -234,14 +237,14 @@ contract TakoFarcasterHub is Ownable {
         string calldata contentId,
         VerifiedCuratorsData calldata verifiedCuratorsData,
         DataTypes.EIP712Signature calldata sig
-    ) external {
+    ) external nonReentrant {
         _validateContentIndex(index);
         _validateCuratorsSigData(verifiedCuratorsData);
         if (!_relayerWhitelisted[relayer]) {
             revert Errors.NotWhitelisted();
         }
 
-        Content memory content = _contentByIndex[index];
+        Content storage content = _contentByIndex[index];
         if (content.status != DataTypes.AuditStatus.Pending) {
             revert Errors.BidIsClose();
         }
@@ -264,14 +267,11 @@ contract TakoFarcasterHub is Ownable {
             sig
         );
 
+        content.status = DataTypes.AuditStatus.Pass;
+        content.curatorId = curatorId;
+        content.curatorContentId = contentId;
         _loan(content.bidToken, content.bidAmount);
-
-        _contentByIndex[index].status = DataTypes.AuditStatus.Pass;
-        _contentByIndex[index].curatorId = curatorId;
-        _contentByIndex[index].curatorContentId = contentId;
-
         emit modifiBidEvent(index, content);
-        (index, _contentByIndex[index]);
     }
 
     // View
@@ -436,7 +436,6 @@ contract TakoFarcasterHub is Ownable {
         if (bidType == BidType.Reply || bidType == BidType.Recasts) {
             content.parentHash = vars.parentHash;
         }
-        content.bidAmount = vars.bidAmount;
         content.bidToken = vars.bidToken;
         content.bidAmount = vars.bidAmount;
         content.bidAddress = _msgSender();
@@ -453,7 +452,7 @@ contract TakoFarcasterHub is Ownable {
     function _claimBack(uint256 index) internal {
         _validateContentIndex(index);
 
-        Content memory content = _contentByIndex[index];
+        Content storage content = _contentByIndex[index];
 
         if (content.bidAddress != _msgSender()) revert Errors.NotBidder();
         if (content.bidExpires > block.timestamp) revert Errors.NotExpired();
@@ -467,15 +466,19 @@ contract TakoFarcasterHub is Ownable {
             );
         }
 
-        _contentByIndex[index].status = DataTypes.AuditStatus.Cancel;
+        content.status = DataTypes.AuditStatus.Cancel;
 
-        emit modifiBidEvent(index, _contentByIndex[index]);
+        emit modifiBidEvent(index, content);
     }
 
     function _loan(address token, uint256 amount) internal {
         uint256 feeAmount = (amount * feeRate) / FEE_DENOMINATOR;
-        _sendTokenOrETH(token, feeCollector, feeAmount);
-        _sendTokenOrETH(token, _msgSender(), amount - feeAmount);
+        if (feeAmount > 0) {
+            _sendTokenOrETH(token, feeCollector, feeAmount);
+        }
+        if (amount - feeAmount > 0) {
+            _sendTokenOrETH(token, _msgSender(), amount - feeAmount);
+        }
     }
 
     function _fetchBidToken(address token, uint256 amount) internal {
