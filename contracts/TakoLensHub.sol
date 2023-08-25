@@ -198,7 +198,7 @@ contract TakoLensHub is Ownable, ReentrancyGuard {
         BidData calldata vars,
         BidType bidType,
         DataTypes.MerkleVerifyData calldata verifyData
-    ) external payable onlyWhitelisted(verifyData) {
+    ) external payable nonReentrant onlyWhitelisted(verifyData) {
         _fetchBidToken(vars.bidToken, vars.bidAmount);
         _bid(vars, bidType);
     }
@@ -207,7 +207,7 @@ contract TakoLensHub is Ownable, ReentrancyGuard {
         BidData[] calldata vars,
         BidType[] calldata bidType,
         DataTypes.MerkleVerifyData calldata verifyData
-    ) external payable onlyWhitelisted(verifyData) {
+    ) external payable nonReentrant onlyWhitelisted(verifyData) {
         uint256 assetAmounts;
         for (uint256 i = 0; i < vars.length; i++) {
             _bid(vars[i], bidType[i]);
@@ -226,7 +226,7 @@ contract TakoLensHub is Ownable, ReentrancyGuard {
         MomokaBidData calldata vars,
         BidType bidType,
         DataTypes.MerkleVerifyData calldata verifyData
-    ) external payable onlyWhitelisted(verifyData) {
+    ) external payable nonReentrant onlyWhitelisted(verifyData) {
         _fetchBidToken(vars.bidToken, vars.bidAmount);
         _bidMomoka(vars, bidType);
     }
@@ -235,7 +235,7 @@ contract TakoLensHub is Ownable, ReentrancyGuard {
         MomokaBidData[] calldata vars,
         BidType[] calldata bidType,
         DataTypes.MerkleVerifyData calldata verifyData
-    ) external payable onlyWhitelisted(verifyData) {
+    ) external payable nonReentrant onlyWhitelisted(verifyData) {
         uint256 assetAmounts;
         for (uint256 i = 0; i < vars.length; i++) {
             _bidMomoka(vars[i], bidType[i]);
@@ -254,7 +254,7 @@ contract TakoLensHub is Ownable, ReentrancyGuard {
         uint256 index,
         uint256 duration,
         uint256 amount
-    ) external payable {
+    ) external payable nonReentrant {
         _updateBid(index, duration, amount, Platform.Polygon);
     }
 
@@ -262,7 +262,7 @@ contract TakoLensHub is Ownable, ReentrancyGuard {
         uint256 index,
         uint256 duration,
         uint256 amount
-    ) external payable {
+    ) external payable nonReentrant {
         _updateBid(index, duration, amount, Platform.Momoka);
     }
 
@@ -723,21 +723,18 @@ contract TakoLensHub is Ownable, ReentrancyGuard {
         DataTypes.AuditStatus status;
         address bidAddress;
         address bidToken;
-        uint256 bidAmount;
         if (platform == Platform.Polygon) {
             _validateContentIndex(index);
             Content storage content = _contentByIndex[index];
             status = content.status;
             bidAddress = content.bidAddress;
             bidToken = content.bidToken;
-            bidAmount = content.bidAmount;
         } else {
             _validateMomokaContentIndex(index);
             MomokaContent storage content = _momokaContentByIndex[index];
             status = content.status;
             bidAddress = content.bidAddress;
             bidToken = content.bidToken;
-            bidAmount = content.bidAmount;
         }
         if (status != DataTypes.AuditStatus.Pending) revert Errors.BidIsClose();
         if (bidAddress != _msgSender()) revert Errors.NotBidder();
