@@ -6,15 +6,9 @@ export const enum CHAINID {
   EthereumGoerli = 5,
 }
 
-export enum CHAIN {
-  Ethereum = 'Ethereum',
-  BNBChain = 'BNBChain',
-  Polygon = 'Polygon',
-  Optimism = 'Optimism',
-
-  EthereumGoerli = 'EthereumGoerli',
-  BNBChainTest = 'BNBChainTest',
-  PolygonTestNet = 'PolygonTestNet',
+export enum NETWORKS {
+  Mainnet = 'MainNet',
+  TestNet = 'TestNet',
 }
 
 export const TEST_SNAPSHOT_ID = '0x1';

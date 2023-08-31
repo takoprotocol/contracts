@@ -31,12 +31,9 @@
     "compile": "npx hardhat compile",
     "test": "npm run compile && TRACK_GAS=true REPORT_GAS=true hardhat test",
     "quick-test": "REPORT_GAS=true hardhat test",
-    "run:takoLens": "npx hardhat run scripts/cli_tako_lens.ts",
-    "run-dashboard:takoLens": "npx hardhat run scripts/cli_tako_lens.ts --network dashboard",
-    "run-polygon:takoLens": "npx hardhat run scripts/cli_tako_lens.ts --network Polygon",
-    "run-mumbai:takoLens": "npx hardhat run scripts/cli_tako_lens.ts --network PolygonTestNet",
-    "run-optimism:takoFarcaster": "npx hardhat run scripts/cli_tako_farcaster.ts --network Optimism",
-    "run-goerli:takoFarcaster": "npx hardhat run scripts/cli_tako_farcaster.ts --network EthereumGoerli",
-    "run:lens": "npx hardhat run scripts/lens.ts"
+    "run-main:takoLens": "npx hardhat run scripts/cli_tako_lens.ts --network MainNet",
+    "run-test:takoLens": "npx hardhat run scripts/cli_tako_lens.ts --network TestNet",
+    "run-main:takoFarcaster": "npx hardhat run scripts/cli_tako_lens.ts --network MainNet",
+    "run-test:takoFarcaster": "npx hardhat run scripts/cli_tako_lens.ts --network TestNet"
   }
 }

@@ -1,11 +1,7 @@
 import '@nomiclabs/hardhat-ethers';
 import '@typechain/hardhat';
 import { HardhatUserConfig } from 'hardhat/config';
-import { readFileSync } from 'fs';
-import { CHAIN, HARDHATEVM_CHAINID, TEST_ACCOUNTS } from './helpers';
-
-const privateKey = readFileSync('.private_key', 'utf-8');
-const privateKeyMain = readFileSync('.private_key_main', 'utf-8');
+import { HARDHATEVM_CHAINID, NETWORKS, TEST_ACCOUNTS } from './helpers';
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -23,43 +19,13 @@ const config: HardhatUserConfig = {
   },
   // defaultNetwork: CHAIN.PolygonTestNet,
   networks: {
-    [CHAIN.EthereumGoerli]: {
-      url: 'https://goerli.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161',
-      chainId: 5,
-      accounts: [privateKey],
-      gas: 'auto',
-      gasPrice: 'auto',
-    },
-    [CHAIN.BNBChainTest]: {
-      url: 'https://data-seed-prebsc-1-s1.binance.org:8545/',
-      chainId: 97,
-      accounts: [privateKey],
-      gas: 'auto',
-      gasPrice: 'auto',
-    },
-    [CHAIN.Optimism]: {
-      chainId: 10,
-      url: 'https://mainnet.optimism.io	',
-      accounts: [privateKeyMain],
-      gas: 'auto',
-      gasPrice: 'auto',
-    },
-    [CHAIN.Polygon]: {
-      chainId: 137,
-      url: 'https://rpc-mainnet.maticvigil.com/',
-      accounts: [privateKeyMain],
-      gas: 'auto',
-      gasPrice: 'auto',
-    },
-    [CHAIN.PolygonTestNet]: {
-      chainId: 80001,
-      url: 'https://rpc-mumbai.maticvigil.com',
-      accounts: [privateKey],
-      gas: 'auto',
-      gasPrice: 'auto',
-    },
-    dashboard: {
+    [NETWORKS.TestNet]: {
       url: 'http://127.0.0.1:24012/rpc',
+      timeout: 999999,
+    },
+    [NETWORKS.Mainnet]: {
+      url: 'http://127.0.0.1:24012/rpc',
+      timeout: 999999,
     },
     hardhat: {
       chainId: HARDHATEVM_CHAINID,
