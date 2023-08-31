@@ -1,12 +1,11 @@
-# V1-core
+# Contracts
 
 Try running some of the following tasks:
 
 ```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
+yarn
+yarn compile
+yarn test
 ```
 
 ### Deployed Contract Addresses
@@ -18,7 +17,7 @@ npx hardhat node
 | takoLensHub (Polgyon) | [0x89dd34D977eF337D8045BF3d7c1Cb461750C0337](https://polygonscan.com/address/0x89dd34D977eF337D8045BF3d7c1Cb461750C0337) |
 | takoFarcasterHub      |                                                                                                                          |
 
-#### Testnet Addresses
+#### TestNet Addresses
 
 | Contract             | Address                                                                                                                         |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
