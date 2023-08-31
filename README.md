@@ -1,25 +1,37 @@
-# Contracts
+# Tako protocol
 
-Try running some of the following tasks:
+## Protocol Overview
 
-```shell
-yarn
-yarn compile
-yarn test
-```
+Tako is an open recommendation protocol, designed to cater to the paradigm shift in content recommendation and distribution from traditional social networks to Web3 social graphs.
 
-### Deployed Contract Addresses
+The Tako Protocol aims to counter centralization issues with a peer-to-peer and value-matching recommendation model. Compared to centralized models, this approach offers content creators a more personalized and efficient way to reach their target audiences and monetize user-targeted advertisements.
 
-#### MainNet Addresses
+This shift from 'Platform as a Curator' to 'User as a Curator' enables all participants to earn rewards by contributing to a Referral Economy, where value is channeled directly to users, and jointly facilitating the content value flow in Web3 Social.
 
-| Contract              | Address                                                                                                                  |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| takoLensHub (Polgyon) | [0x89dd34D977eF337D8045BF3d7c1Cb461750C0337](https://polygonscan.com/address/0x89dd34D977eF337D8045BF3d7c1Cb461750C0337) |
-| takoFarcasterHub      |                                                                                                                          |
+## Contracts
 
-#### TestNet Addresses
+Tako has integrated with Lens and is currently integrating with more social graphs, such as Farcaster.
 
-| Contract             | Address                                                                                                                         |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| takoLensHub (Mumbai) | [0x30daf74D17781f0C2aB19db687F14E3293B17E7e](https://mumbai.polygonscan.com/address/0x30daf74D17781f0C2aB19db687F14E3293B17E7e) |
-| takoFarcasterHub     |                                                                                                                                 |
+Tako has developed contracts based on Polygon and has deployed them on both the mainnet and testnet.
+
+**Resources:**
+
+[Deployed Contract Addresses](https://docs.tako.so/integration/tako-recommendation-protocol/deployed-contract-address)
+
+[Contract Specification](https://docs.tako.so/integration/tako-recommendation-protocol/contract-specification)
+
+## APIs
+
+We provide Tako APIs that allows you to conveniently integrate Tako into your dApp.
+
+**Resources:**
+
+[Developer Docs](https://docs.tako.so/integration/tako-recommendation-protocol)
+
+## Follow Tako
+
+Tako is being iteratively developed every day.
+
+Please follow Tako for updates.
+
+[+ FOLLOW](https://github.com/takoprotocol)
