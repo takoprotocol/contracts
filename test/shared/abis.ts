@@ -269,4 +269,14 @@ export const LensHubAbi = [
   },
 ];
 
+export const FarcasterIdRegistryAbi = [
+  {
+    inputs: [{ internalType: 'address', name: 'owner', type: 'address' }],
+    name: 'idOf',
+    outputs: [{ internalType: 'uint256', name: 'fid', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+];
+
 export const lensFreeCollectModuleAbi = [];

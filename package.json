@@ -35,8 +35,8 @@
     "run-dashboard:takoLens": "npx hardhat run scripts/cli_tako_lens.ts --network dashboard",
     "run-polygon:takoLens": "npx hardhat run scripts/cli_tako_lens.ts --network Polygon",
     "run-mumbai:takoLens": "npx hardhat run scripts/cli_tako_lens.ts --network PolygonTestNet",
-    "run-polygon:takoFarcaster": "npx hardhat run scripts/cli_tako_farcaster.ts --network Polygon",
-    "run-mumbai:takoFarcaster": "npx hardhat run scripts/cli_tako_farcaster.ts --network PolygonTestNet",
+    "run-optimism:takoFarcaster": "npx hardhat run scripts/cli_tako_farcaster.ts --network Optimism",
+    "run-goerli:takoFarcaster": "npx hardhat run scripts/cli_tako_farcaster.ts --network EthereumGoerli",
     "run:lens": "npx hardhat run scripts/lens.ts"
   }
 }

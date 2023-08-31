@@ -9,7 +9,11 @@ import {
 } from './shared/utils';
 import { TakoLensHub, ERC20Token, TakoFarcasterHub } from '../typechain-types';
 import { FakeContract, smock } from '@defi-wonderland/smock';
-import { LensHubAbi, lensFreeCollectModuleAbi } from './shared/abis';
+import {
+  FarcasterIdRegistryAbi,
+  LensHubAbi,
+  lensFreeCollectModuleAbi,
+} from './shared/abis';
 
 use(solidity);
 
@@ -22,6 +26,7 @@ export const users: Signer[] = [];
 export let relayer: Signer;
 
 export let lensHubMock: FakeContract<BaseContract>;
+export let farcasterIdRegistry: FakeContract<BaseContract>;
 export let lensFreeCollectModule: FakeContract<BaseContract>;
 export let takoLensHub: TakoLensHub;
 export let takoFarcasterHub: TakoFarcasterHub;
@@ -58,6 +63,7 @@ async function initAccount() {
 
 async function initContract() {
   await initLensHubMock();
+  await initFarcasterMock();
   const takoLensHubFactory = await hre.ethers.getContractFactory('TakoLensHub');
   const takoFarcasterHubFactory = await hre.ethers.getContractFactory(
     'TakoFarcasterHub'
@@ -73,7 +79,10 @@ async function initContract() {
     )) as TakoLensHub;
   takoFarcasterHub = (await takoFarcasterHubFactory
     .connect(deployer)
-    .deploy(ethers.constants.HashZero)) as TakoFarcasterHub;
+    .deploy(
+      ethers.constants.HashZero,
+      farcasterIdRegistry.address
+    )) as TakoFarcasterHub;
   erc20Token = (await erc20TokenFactory
     .connect(deployer)
     .deploy()) as ERC20Token;
@@ -89,4 +98,17 @@ async function initLensHubMock() {
   lensHubMock.commentWithSig.returns(1);
   lensHubMock.ownerOf.whenCalledWith(1).returns(profileOwner);
   lensHubMock.ownerOf.whenCalledWith(2).returns(profileOwner1);
+}
+
+async function initFarcasterMock() {
+  const profileOwner = await users[0].getAddress();
+  const profileOwner1 = await users[1].getAddress();
+  farcasterIdRegistry = await smock.fake(FarcasterIdRegistryAbi);
+  farcasterIdRegistry.idOf.whenCalledWith(profileOwner).returns(1);
+  farcasterIdRegistry.idOf.whenCalledWith(profileOwner1).returns(2);
+  for (let i = 3; i < 15; i++) {
+    farcasterIdRegistry.idOf
+      .whenCalledWith(`0x000000000000000000000000000000000000000${i}`)
+      .returns(i);
+  }
 }

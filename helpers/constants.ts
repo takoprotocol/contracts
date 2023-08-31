@@ -10,6 +10,7 @@ export enum CHAIN {
   Ethereum = 'Ethereum',
   BNBChain = 'BNBChain',
   Polygon = 'Polygon',
+  Optimism = 'Optimism',
 
   EthereumGoerli = 'EthereumGoerli',
   BNBChainTest = 'BNBChainTest',

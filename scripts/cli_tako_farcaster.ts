@@ -5,9 +5,15 @@ import { readFileSync } from 'fs';
 declare const global: any;
 const privateKey = readFileSync('.private_key', 'utf-8');
 const testWallet = new hre.ethers.Wallet(privateKey);
+
+const farcasterIdRegistry: { [key: string]: string } = {
+  [CHAIN.Optimism]: '0x00000000fcaf86937e41ba038b4fa40baa4b780a',
+  [CHAIN.EthereumGoerli]: '0xda107a1caf36d198b12c16c7b6a1d1c795978c42',
+};
+
 const deployed: { [key: string]: string } = {
-  [CHAIN.Polygon]: '',
-  [CHAIN.PolygonTestNet]: '0x00cf5902afD69Ee2ee5DCFed14571C688D9c0DCF',
+  [CHAIN.Optimism]: '',
+  [CHAIN.EthereumGoerli]: '',
 };
 
 async function main() {
@@ -37,11 +43,13 @@ async function deploy() {
   const merkleRoot =
     networkName === CHAIN.Polygon ? '' : hre.ethers.constants.HashZero;
 
-  const takoLensHub = await factory.deploy(merkleRoot);
-
   console.log(`deploy tako farcaster hub, network = ${networkName}`);
-
   await confirmDeploy();
+
+  const takoLensHub = await factory.deploy(
+    merkleRoot,
+    farcasterIdRegistry[networkName]
+  );
   await takoLensHub.deployed();
   global.takoLensHub = takoLensHub;
 

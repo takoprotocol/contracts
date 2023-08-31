@@ -26,6 +26,7 @@ let fidOwner = users[0];
 let fidOwner1 = users[1];
 let relayer = testWallet;
 const fid = 1;
+const fid1 = 2;
 const contentBaseId = '0x1';
 
 makeSuiteCleanRoom('TakoFarcasterHub', () => {
@@ -98,9 +99,9 @@ makeSuiteCleanRoom('TakoFarcasterHub', () => {
             bidAmount: BID_AMOUNT,
             duration: DAY * maxDuration + DAY,
             toCurators: [fid],
+            toCuratorAddresses: [fidOwner.getAddress()],
           },
           0,
-          await getVerifiedCurators(),
           getMerkleBaseData(),
           {
             value: BID_AMOUNT,
@@ -110,16 +111,24 @@ makeSuiteCleanRoom('TakoFarcasterHub', () => {
     });
     it('Should fail to bid if the to profile limit exceeded', async () => {
       const toCurators = [];
-      for (let i = 0; i < 10; i++) {
+      const toCuratorAddresses = [
+        await fidOwner.getAddress(),
+        await fidOwner1.getAddress(),
+      ];
+      for (let i = 1; i < 10; i++) {
         toCurators.push(i);
+        if (i > 2) {
+          toCuratorAddresses.push(
+            `0x000000000000000000000000000000000000000${i}`
+          );
+        }
       }
       await expect(
         takoFarcasterHub
           .connect(user)
           .bid(
-            getBidBaseParams(toCurators),
+            getBidBaseParams(toCurators, toCuratorAddresses),
             0,
-            await getVerifiedCurators(),
             getMerkleBaseData(),
             {
               value: BID_AMOUNT,
@@ -136,30 +145,18 @@ makeSuiteCleanRoom('TakoFarcasterHub', () => {
       await expect(
         takoFarcasterHub
           .connect(user)
-          .bid(
-            getBidBaseParams(),
-            0,
-            await getVerifiedCurators(),
-            getMerkleBaseData(),
-            {
-              value: BID_AMOUNT,
-            }
-          )
+          .bid(getBidBaseParams(), 0, getMerkleBaseData(), {
+            value: BID_AMOUNT,
+          })
       ).to.revertedWith(ERRORS.NOT_REACHED_MINIMUM);
     });
     it('Should fail to bid if insufficient input amount', async () => {
       await expect(
         takoFarcasterHub
           .connect(user)
-          .bid(
-            getBidBaseParams(),
-            0,
-            await getVerifiedCurators(),
-            getMerkleBaseData(),
-            {
-              value: BID_AMOUNT - 1,
-            }
-          )
+          .bid(getBidBaseParams(), 0, getMerkleBaseData(), {
+            value: BID_AMOUNT - 1,
+          })
       ).to.revertedWith(ERRORS.INSUFFICIENT_INPUT_AMOUNT);
     });
     it('Should fail to bid if the bid token not whitelisted', async () => {
@@ -172,9 +169,9 @@ makeSuiteCleanRoom('TakoFarcasterHub', () => {
             bidAmount: BID_AMOUNT,
             duration: DAY,
             toCurators: [fid],
+            toCuratorAddresses: [fidOwner.getAddress()],
           },
           0,
-          await getVerifiedCurators(),
           getMerkleBaseData()
         )
       ).to.revertedWith(ERRORS.BID_TOKEN_NOT_WHITELISTED);
@@ -188,30 +185,62 @@ makeSuiteCleanRoom('TakoFarcasterHub', () => {
       await expect(
         takoFarcasterHub
           .connect(user)
+          .bid(getBidBaseParams(), 0, getMerkleBaseData(), {
+            value: BID_AMOUNT,
+          })
+      ).to.revertedWith(ERRORS.BID_TYPE_NOT_ACCEPT);
+    });
+    it('Should fail to bid if the curators error', async () => {
+      await expect(
+        takoFarcasterHub
+          .connect(user)
           .bid(
-            getBidBaseParams(),
+            getBidBaseParams([1], [fidOwner1.getAddress()]),
             0,
-            await getVerifiedCurators(),
             getMerkleBaseData(),
             {
               value: BID_AMOUNT,
             }
           )
-      ).to.revertedWith(ERRORS.BID_TYPE_NOT_ACCEPT);
+      ).to.revertedWith(ERRORS.PARAMS_INVALID);
+      await expect(
+        takoFarcasterHub
+          .connect(user)
+          .bid(
+            getBidBaseParams(
+              [fid, fid1],
+              [fidOwner1.getAddress(), fidOwner.getAddress()]
+            ),
+            0,
+            getMerkleBaseData(),
+            {
+              value: BID_AMOUNT,
+            }
+          )
+      ).to.revertedWith(ERRORS.PARAMS_INVALID);
+      await expect(
+        takoFarcasterHub
+          .connect(user)
+          .bid(
+            getBidBaseParams(
+              [fid],
+              [fidOwner1.getAddress(), fidOwner.getAddress()]
+            ),
+            0,
+            getMerkleBaseData(),
+            {
+              value: BID_AMOUNT,
+            }
+          )
+      ).to.revertedWith(ERRORS.PARAMS_INVALID);
     });
     it('Should success to bid cast', async () => {
       await expect(
         takoFarcasterHub
           .connect(user)
-          .bid(
-            getBidBaseParams(),
-            0,
-            await getVerifiedCurators(),
-            getMerkleBaseData(),
-            {
-              value: BID_AMOUNT,
-            }
-          )
+          .bid(getBidBaseParams(), 0, getMerkleBaseData(), {
+            value: BID_AMOUNT,
+          })
       ).to.not.reverted;
       expect(await takoFarcasterHub.getBidCounter()).to.eq(1);
     });
@@ -219,15 +248,9 @@ makeSuiteCleanRoom('TakoFarcasterHub', () => {
       await expect(
         takoFarcasterHub
           .connect(user)
-          .bid(
-            getBidBaseParams(),
-            1,
-            await getVerifiedCurators(),
-            getMerkleBaseData(),
-            {
-              value: BID_AMOUNT,
-            }
-          )
+          .bid(getBidBaseParams(), 1, getMerkleBaseData(), {
+            value: BID_AMOUNT,
+          })
       ).to.not.reverted;
       expect(await takoFarcasterHub.getBidCounter()).to.eq(1);
     });
@@ -235,15 +258,9 @@ makeSuiteCleanRoom('TakoFarcasterHub', () => {
       await expect(
         takoFarcasterHub
           .connect(user)
-          .bid(
-            getBidBaseParams(),
-            2,
-            await getVerifiedCurators(),
-            getMerkleBaseData(),
-            {
-              value: BID_AMOUNT,
-            }
-          )
+          .bid(getBidBaseParams(), 2, getMerkleBaseData(), {
+            value: BID_AMOUNT,
+          })
       ).to.not.reverted;
       expect(await takoFarcasterHub.getBidCounter()).to.eq(1);
     });
@@ -274,7 +291,6 @@ makeSuiteCleanRoom('TakoFarcasterHub', () => {
             fid,
             relayer.address,
             contentBaseId,
-            await getVerifiedCurators(),
             await getLoanWithSigData()
           )
       ).to.not.reverted;
@@ -336,7 +352,6 @@ makeSuiteCleanRoom('TakoFarcasterHub', () => {
             fid,
             relayer.address,
             contentBaseId,
-            await getVerifiedCurators(),
             await getLoanWithSigData()
           )
       ).to.not.reverted;
@@ -378,7 +393,6 @@ makeSuiteCleanRoom('TakoFarcasterHub', () => {
             fid,
             relayer.address,
             contentBaseId,
-            await getVerifiedCurators(),
             await getLoanWithSigData()
           )
       ).to.revertedWith(ERRORS.PARAMS_INVALID);
@@ -396,7 +410,6 @@ makeSuiteCleanRoom('TakoFarcasterHub', () => {
             fid,
             relayer.address,
             contentBaseId,
-            await getVerifiedCurators(),
             await getLoanWithSigData()
           )
       ).to.revertedWith(ERRORS.BID_IS_CLOSE);
@@ -410,7 +423,6 @@ makeSuiteCleanRoom('TakoFarcasterHub', () => {
             fid,
             relayer.address,
             contentBaseId,
-            await getVerifiedCurators(),
             await getLoanWithSigData()
           )
       ).to.revertedWith(ERRORS.NOT_PROFILE_OWNER);
@@ -424,7 +436,6 @@ makeSuiteCleanRoom('TakoFarcasterHub', () => {
             fid,
             await relayer.getAddress(),
             contentBaseId,
-            await getVerifiedCurators(),
             await getLoanWithSigData(2)
           )
       ).to.reverted;
@@ -439,7 +450,6 @@ makeSuiteCleanRoom('TakoFarcasterHub', () => {
             fid,
             relayer.address,
             contentBaseId,
-            await getVerifiedCurators(),
             await getLoanWithSigData()
           )
       ).to.changeEtherBalances(
@@ -472,43 +482,28 @@ async function initBid() {
   await expect(
     takoFarcasterHub
       .connect(user)
-      .bid(
-        getBidBaseParams(),
-        0,
-        await getVerifiedCurators(),
-        getMerkleBaseData(),
-        {
-          value: BID_AMOUNT,
-        }
-      )
+      .bid(getBidBaseParams(), 0, getMerkleBaseData(), {
+        value: BID_AMOUNT,
+      })
   ).to.not.reverted;
   await expect(
     takoFarcasterHub
       .connect(user)
-      .bid(
-        getBidBaseParams(),
-        1,
-        await getVerifiedCurators(),
-        getMerkleBaseData(),
-        { value: BID_AMOUNT }
-      )
+      .bid(getBidBaseParams(), 1, getMerkleBaseData(), { value: BID_AMOUNT })
   ).to.not.reverted;
   await expect(
     takoFarcasterHub
       .connect(user)
-      .bid(
-        getBidBaseParams(),
-        2,
-        await getVerifiedCurators(),
-        getMerkleBaseData(),
-        {
-          value: BID_AMOUNT,
-        }
-      )
+      .bid(getBidBaseParams(), 2, getMerkleBaseData(), {
+        value: BID_AMOUNT,
+      })
   ).to.not.reverted;
 }
 
-function getBidBaseParams(toCurators = [fid]) {
+function getBidBaseParams(
+  toCurators = [fid],
+  toCuratorAddresses: any[] = [fidOwner.getAddress()]
+) {
   return {
     contentURI: '',
     parentHash: '',
@@ -516,6 +511,7 @@ function getBidBaseParams(toCurators = [fid]) {
     bidAmount: BID_AMOUNT,
     duration: DAY,
     toCurators: toCurators,
+    toCuratorAddresses: toCuratorAddresses,
   };
 }
 
@@ -524,18 +520,6 @@ function getMerkleBaseData(index?: number, merkleProof?: string[]) {
     index: index || 0,
     merkleProof: merkleProof || [],
   };
-}
-
-async function getVerifiedCurators(
-  toCuratorIds?: number[],
-  toCurators?: string[]
-) {
-  return getVerifiedCuratorsData(
-    toCuratorIds ? toCuratorIds : [fid],
-    toCurators ? toCurators : [await fidOwner.getAddress()],
-    new Date().getTime() + DAY,
-    takoFarcasterHub.address
-  );
 }
 
 async function getLoanWithSigData(

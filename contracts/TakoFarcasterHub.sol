@@ -6,6 +6,7 @@ import "./access/Ownable.sol";
 import "./libraries/DataTypes.sol";
 import "./libraries/Errors.sol";
 import "./libraries/SigUtils.sol";
+import "./interfaces/IIdRegistry.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
@@ -13,6 +14,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 contract TakoFarcasterHub is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
+    address FARCASTER_ID_REGISTRY;
 
     enum BidType {
         Casts,
@@ -27,6 +29,7 @@ contract TakoFarcasterHub is Ownable, ReentrancyGuard {
         uint256 bidAmount;
         uint256 duration;
         uint256[] toCurators;
+        address[] toCuratorAddresses;
     }
 
     struct Content {
@@ -43,22 +46,11 @@ contract TakoFarcasterHub is Ownable, ReentrancyGuard {
         BidType bidType;
     }
 
-    struct VerifiedCuratorsData {
-        uint256[] curatorIds;
-        address[] curators;
-        address relayer;
-        DataTypes.EIP712Signature sig;
-    }
-
     string public constant name = "Tako Farcaster Hub";
     bytes32 public merkleRoot;
     bytes32 internal constant LOAN_WITH_SIG_TYPEHASH =
         keccak256(
             "LoanWithSig(uint256 index,address curator,string contentId,uint256 deadline)"
-        );
-    bytes32 internal constant VERIFIED_CURATORS_TYPEHASH =
-        keccak256(
-            "VerifiedCurators(uint256[] curatorIds,address[] curators,uint256 deadline)"
         );
 
     uint8 public maxToCuratorCounter = 5;
@@ -73,8 +65,6 @@ contract TakoFarcasterHub is Ownable, ReentrancyGuard {
     mapping(address => mapping(BidType => bool)) _disableAuditType;
     mapping(address => bool) internal _relayerWhitelisted;
     mapping(address => bool) internal _governances;
-    mapping(uint256 => mapping(uint256 => address))
-        private _verifiedCuratorById;
 
     uint256 public constant FEE_DENOMINATOR = 10 ** 10;
 
@@ -99,9 +89,10 @@ contract TakoFarcasterHub is Ownable, ReentrancyGuard {
         _;
     }
 
-    constructor(bytes32 initMerkleRoot) {
+    constructor(bytes32 initMerkleRoot, address farcasterIdRegistry) {
         merkleRoot = initMerkleRoot;
         feeCollector = _msgSender();
+        FARCASTER_ID_REGISTRY = farcasterIdRegistry;
     }
 
     receive() external payable {}
@@ -151,10 +142,8 @@ contract TakoFarcasterHub is Ownable, ReentrancyGuard {
     function bid(
         BidData calldata vars,
         BidType bidType,
-        VerifiedCuratorsData calldata verifiedCuratorsData,
         DataTypes.MerkleVerifyData calldata verifyData
-    ) external payable onlyWhitelisted(verifyData) {
-        _validateCuratorsSigData(verifiedCuratorsData);
+    ) external payable nonReentrant onlyWhitelisted(verifyData) {
         _fetchBidToken(vars.bidToken, vars.bidAmount);
         _bid(vars, bidType);
     }
@@ -162,11 +151,9 @@ contract TakoFarcasterHub is Ownable, ReentrancyGuard {
     function bidBatch(
         BidData[] calldata vars,
         BidType[] calldata bidType,
-        VerifiedCuratorsData calldata verifiedCuratorsData,
         DataTypes.MerkleVerifyData calldata verifyData
-    ) external payable onlyWhitelisted(verifyData) {
+    ) external payable nonReentrant onlyWhitelisted(verifyData) {
         uint256 assetAmounts;
-        _validateCuratorsSigData(verifiedCuratorsData);
         for (uint256 i = 0; i < vars.length; i++) {
             _bid(vars[i], bidType[i]);
             if (vars[i].bidToken == address(0)) {
@@ -184,7 +171,7 @@ contract TakoFarcasterHub is Ownable, ReentrancyGuard {
         uint256 index,
         uint256 duration,
         uint256 amount
-    ) external payable {
+    ) external payable nonReentrant {
         _validateDuration(duration);
         _validateContentIndex(index);
 
@@ -235,11 +222,10 @@ contract TakoFarcasterHub is Ownable, ReentrancyGuard {
         uint256 curatorId,
         address relayer,
         string calldata contentId,
-        VerifiedCuratorsData calldata verifiedCuratorsData,
         DataTypes.EIP712Signature calldata sig
     ) external nonReentrant {
         _validateContentIndex(index);
-        _validateCuratorsSigData(verifiedCuratorsData);
+
         if (!_relayerWhitelisted[relayer]) {
             revert Errors.NotWhitelisted();
         }
@@ -328,20 +314,16 @@ contract TakoFarcasterHub is Ownable, ReentrancyGuard {
         address token,
         uint256 amount,
         BidType bidType,
-        uint256[] memory toCurators
+        address[] memory toCuratorAddresses
     ) internal view {
-        if (toCurators.length > maxToCuratorCounter) {
+        if (toCuratorAddresses.length > maxToCuratorCounter) {
             revert Errors.ToCuratorLimitExceeded();
         }
-        uint256 blockNumber = block.number;
-        for (uint8 i = 0; i < toCurators.length; i++) {
-            address curatorAddr = _verifiedCuratorById[toCurators[i]][
-                blockNumber
-            ];
-            if (amount < _minBidByTokenByWallet[curatorAddr][token]) {
+        for (uint8 i = 0; i < toCuratorAddresses.length; i++) {
+            if (amount < _minBidByTokenByWallet[toCuratorAddresses[i]][token]) {
                 revert Errors.NotReachedMinimum();
             }
-            if (_disableAuditType[curatorAddr][bidType]) {
+            if (_disableAuditType[toCuratorAddresses[i]][bidType]) {
                 revert Errors.BidTypeNotAccept();
             }
         }
@@ -351,8 +333,9 @@ contract TakoFarcasterHub is Ownable, ReentrancyGuard {
         uint256 curatorId,
         uint256[] memory toCurators
     ) internal view {
-        address curator = _verifiedCuratorById[curatorId][block.number];
-        if (curator != _msgSender()) {
+        if (
+            curatorId != IIdRegistry(FARCASTER_ID_REGISTRY).idOf(_msgSender())
+        ) {
             revert Errors.NotProfileOwner();
         }
         if (toCurators.length == 0) {
@@ -371,35 +354,17 @@ contract TakoFarcasterHub is Ownable, ReentrancyGuard {
         }
     }
 
-    function _validateCuratorsSigData(
-        VerifiedCuratorsData calldata verifiedCuratorsData
-    ) internal {
-        if (!_relayerWhitelisted[verifiedCuratorsData.relayer]) {
-            revert Errors.NotWhitelisted();
-        }
-        SigUtils._validateRecoveredAddress(
-            SigUtils._calculateDigest(
-                keccak256(
-                    abi.encode(
-                        VERIFIED_CURATORS_TYPEHASH,
-                        keccak256(
-                            abi.encodePacked(verifiedCuratorsData.curatorIds)
-                        ),
-                        keccak256(
-                            abi.encodePacked(verifiedCuratorsData.curators)
-                        ),
-                        verifiedCuratorsData.sig.deadline
-                    )
-                ),
-                name
-            ),
-            verifiedCuratorsData.relayer,
-            verifiedCuratorsData.sig
-        );
-        for (uint8 i = 0; i < verifiedCuratorsData.curatorIds.length; i++) {
-            _verifiedCuratorById[verifiedCuratorsData.curatorIds[i]][
-                block.number
-            ] = verifiedCuratorsData.curators[i];
+    function _validateCurators(
+        uint256[] memory curatorIds,
+        address[] memory curators
+    ) internal view {
+        for (uint8 i = 0; i < curatorIds.length; i++) {
+            if (
+                IIdRegistry(FARCASTER_ID_REGISTRY).idOf(curators[i]) !=
+                curatorIds[i]
+            ) {
+                revert Errors.ParamsInvalid();
+            }
         }
     }
 
@@ -425,8 +390,13 @@ contract TakoFarcasterHub is Ownable, ReentrancyGuard {
 
     function _bid(BidData calldata vars, BidType bidType) internal {
         _validateDuration(vars.duration);
-
-        _validateBid(vars.bidToken, vars.bidAmount, bidType, vars.toCurators);
+        _validateCurators(vars.toCurators, vars.toCuratorAddresses);
+        _validateBid(
+            vars.bidToken,
+            vars.bidAmount,
+            bidType,
+            vars.toCuratorAddresses
+        );
 
         uint256 counter = ++_bidCounter;
         Content memory content;

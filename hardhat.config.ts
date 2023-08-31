@@ -37,6 +37,13 @@ const config: HardhatUserConfig = {
       gas: 'auto',
       gasPrice: 'auto',
     },
+    [CHAIN.Optimism]: {
+      chainId: 10,
+      url: 'https://mainnet.optimism.io	',
+      accounts: [privateKeyMain],
+      gas: 'auto',
+      gasPrice: 'auto',
+    },
     [CHAIN.Polygon]: {
       chainId: 137,
       url: 'https://rpc-mainnet.maticvigil.com/',
