@@ -9,7 +9,7 @@ const farcasterIdRegistry: { [key: string]: string } = {
 };
 
 const deployed: { [key: string]: string } = {
-  [NETWORKS.Mainnet]: '',
+  [NETWORKS.Mainnet]: '0x833e2cf3d2759783f771e13a3951194d1a280547',
   [NETWORKS.TestNet]: '',
 };
 
@@ -37,8 +37,7 @@ async function deploy() {
   const networkName = hre.network.name;
   const factory = await hre.ethers.getContractFactory('TakoFarcasterHub');
 
-  const merkleRoot =
-    networkName === NETWORKS.TestNet ? '' : hre.ethers.constants.HashZero;
+  const merkleRoot = hre.ethers.constants.HashZero;
 
   console.log(`deploy tako farcaster hub, network = ${networkName}`);
   await confirmDeploy();

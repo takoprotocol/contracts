@@ -20,11 +20,11 @@ const config: HardhatUserConfig = {
   // defaultNetwork: CHAIN.PolygonTestNet,
   networks: {
     [NETWORKS.TestNet]: {
-      url: 'http://127.0.0.1:24012/rpc',
+      url: 'http://localhost:24012/rpc',
       timeout: 999999,
     },
     [NETWORKS.Mainnet]: {
-      url: 'http://127.0.0.1:24012/rpc',
+      url: 'http://localhost:24012/rpc',
       timeout: 999999,
     },
     hardhat: {
