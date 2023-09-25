@@ -64,7 +64,7 @@ contract TakoFarcasterHub is Ownable, ReentrancyGuard {
     mapping(address => mapping(address => uint256)) _minBidByTokenByWallet;
     mapping(address => mapping(BidType => bool)) _disableAuditType;
     mapping(address => bool) internal _relayerWhitelisted;
-    mapping(address => bool) internal _governances;
+    mapping(address => bool) internal _governance;
 
     uint256 public constant FEE_DENOMINATOR = 10 ** 10;
 
@@ -72,7 +72,7 @@ contract TakoFarcasterHub is Ownable, ReentrancyGuard {
     event modifiBidEvent(uint256 index, Content content);
 
     modifier onlyGov() {
-        if (!_governances[_msgSender()]) {
+        if (!_governance[_msgSender()]) {
             revert Errors.NotGovernance();
         }
         _;
@@ -110,12 +110,12 @@ contract TakoFarcasterHub is Ownable, ReentrancyGuard {
 
     function setGovernance(address gov, bool whitelist) external onlyOwner {
         if (gov == address(0)) revert Errors.AddressCanNotBeZero();
-        _governances[gov] = whitelist;
+        _governance[gov] = whitelist;
     }
 
     // Gov
-    function setMerkleRoot(bytes32 newMerkelRoot) external onlyGov {
-        merkleRoot = newMerkelRoot;
+    function setMerkleRoot(bytes32 newMerkleRoot) external onlyGov {
+        merkleRoot = newMerkleRoot;
     }
 
     function whitelistBidToken(address token, bool whitelist) external onlyGov {
@@ -284,7 +284,7 @@ contract TakoFarcasterHub is Ownable, ReentrancyGuard {
     }
 
     function isGovernance(address wallet) external view returns (bool) {
-        return _governances[wallet];
+        return _governance[wallet];
     }
 
     function getContentByIndex(

@@ -99,7 +99,7 @@ contract TakoLensHub is Ownable, ReentrancyGuard {
     uint256 _momokaBidCounter;
     mapping(uint256 => MomokaContent) internal _momokaContentByIndex;
     mapping(address => bool) internal _relayerWhitelisted;
-    mapping(address => bool) internal _governances;
+    mapping(address => bool) internal _governance;
 
     uint256 public constant FEE_DENOMINATOR = 10 ** 10;
 
@@ -109,7 +109,7 @@ contract TakoLensHub is Ownable, ReentrancyGuard {
     event modifiBidMomokaEvent(uint256 index, MomokaContent content);
 
     modifier onlyGov() {
-        if (!_governances[_msgSender()]) {
+        if (!_governance[_msgSender()]) {
             revert Errors.NotGovernance();
         }
         _;
@@ -154,7 +154,7 @@ contract TakoLensHub is Ownable, ReentrancyGuard {
     }
 
     function setGovernance(address gov, bool whitelist) external onlyOwner {
-        _governances[gov] = whitelist;
+        _governance[gov] = whitelist;
     }
 
     // Gov
@@ -169,8 +169,8 @@ contract TakoLensHub is Ownable, ReentrancyGuard {
         LENS_FREE_COLLECT_MODULE = collectModule;
     }
 
-    function setMerkleRoot(bytes32 newMerkelRoot) external onlyGov {
-        merkleRoot = newMerkelRoot;
+    function setMerkleRoot(bytes32 newMerkleRoot) external onlyGov {
+        merkleRoot = newMerkleRoot;
     }
 
     function whitelistBidToken(address token, bool whitelist) external onlyGov {
@@ -493,7 +493,7 @@ contract TakoLensHub is Ownable, ReentrancyGuard {
     }
 
     function isGovernance(address wallet) external view returns (bool) {
-        return _governances[wallet];
+        return _governance[wallet];
     }
 
     function getContentByIndex(
