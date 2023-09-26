@@ -1,19 +1,24 @@
-import { use } from 'chai';
-import { BaseContract, Signer, Wallet } from 'ethers';
-import hre, { ethers } from 'hardhat';
-import { solidity } from 'ethereum-waffle';
+import { use } from "chai";
+import { BaseContract, Signer, Wallet } from "ethers";
+import hre, { ethers } from "hardhat";
+import { solidity } from "ethereum-waffle";
 import {
   FAKE_PRIVATEKEY,
   revertToSnapshot,
   takeSnapshot,
-} from './shared/utils';
-import { TakoLensHub, ERC20Token, TakoFarcasterHub } from '../typechain-types';
-import { FakeContract, smock } from '@defi-wonderland/smock';
+} from "./shared/utils";
+import {
+  TakoLensHub,
+  ERC20Token,
+  TakoFarcasterHub,
+  TakoOpenLensHub,
+} from "../typechain-types";
+import { FakeContract, smock } from "@defi-wonderland/smock";
 import {
   FarcasterIdRegistryAbi,
   LensHubAbi,
   lensFreeCollectModuleAbi,
-} from './shared/abis';
+} from "./shared/abis";
 
 use(solidity);
 
@@ -30,6 +35,7 @@ export let farcasterIdRegistry: FakeContract<BaseContract>;
 export let lensFreeCollectModule: FakeContract<BaseContract>;
 export let takoLensHub: TakoLensHub;
 export let takoFarcasterHub: TakoFarcasterHub;
+export let takoOpenLensHub: TakoOpenLensHub;
 export let erc20Token: ERC20Token;
 
 export function makeSuiteCleanRoom(name: string, tests: () => void) {
@@ -64,11 +70,14 @@ async function initAccount() {
 async function initContract() {
   await initLensHubMock();
   await initFarcasterMock();
-  const takoLensHubFactory = await hre.ethers.getContractFactory('TakoLensHub');
+  const takoLensHubFactory = await hre.ethers.getContractFactory("TakoLensHub");
   const takoFarcasterHubFactory = await hre.ethers.getContractFactory(
-    'TakoFarcasterHub'
+    "TakoFarcasterHub"
   );
-  const erc20TokenFactory = await hre.ethers.getContractFactory('ERC20Token');
+  const takoOpenLensFactory = await hre.ethers.getContractFactory(
+    "TakoOpenLensHub"
+  );
+  const erc20TokenFactory = await hre.ethers.getContractFactory("ERC20Token");
 
   takoLensHub = (await takoLensHubFactory
     .connect(deployer)
@@ -83,6 +92,9 @@ async function initContract() {
       ethers.constants.HashZero,
       farcasterIdRegistry.address
     )) as TakoFarcasterHub;
+  takoOpenLensHub = (await takoOpenLensFactory
+    .connect(deployer)
+    .deploy(lensHubMock.address, ethers.constants.HashZero)) as TakoOpenLensHub;
   erc20Token = (await erc20TokenFactory
     .connect(deployer)
     .deploy()) as ERC20Token;

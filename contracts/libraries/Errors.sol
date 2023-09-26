@@ -29,5 +29,6 @@ library Errors {
     error NotBidder();
     error BidIsClose();
 
+    error NotTimeToClaimYet();
     error Paused();
 }

@@ -33,6 +33,8 @@
     "quick-test": "REPORT_GAS=true hardhat test",
     "run-main:takoLens": "npx hardhat run scripts/cli_tako_lens.ts --network MainNet",
     "run-test:takoLens": "npx hardhat run scripts/cli_tako_lens.ts --network TestNet",
+    "run-main:takoOpenLens": "npx hardhat run scripts/cli_tako_open_lens.ts --network MainNet",
+    "run-test:takoOpenLens": "npx hardhat run scripts/cli_tako_open_lens.ts --network TestNet",
     "run-main:takoFarcaster": "npx hardhat run scripts/cli_tako_farcaster.ts --network MainNet",
     "run-test:takoFarcaster": "npx hardhat run scripts/cli_tako_farcaster.ts --network TestNet"
   }
