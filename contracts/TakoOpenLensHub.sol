@@ -5,7 +5,6 @@ pragma solidity ^0.8.17;
 import "./access/Ownable.sol";
 import "./libraries/DataTypes.sol";
 import "./libraries/Errors.sol";
-import "./interfaces/ILensHub.sol";
 import "./libraries/SigUtils.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -14,8 +13,6 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 contract TakoOpenLensHub is Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
-
-    address lensHub;
 
     struct BidData {
         string contentId;
@@ -75,9 +72,7 @@ contract TakoOpenLensHub is Ownable, ReentrancyGuard {
         _;
     }
 
-    constructor(address initLensHub, bytes32 initMerkleRoot) {
-        if (initLensHub == address(0)) revert Errors.AddressCanNotBeZero();
-        lensHub = initLensHub;
+    constructor(bytes32 initMerkleRoot) {
         merkleRoot = initMerkleRoot;
         feeCollector = _msgSender();
     }
@@ -100,15 +95,6 @@ contract TakoOpenLensHub is Ownable, ReentrancyGuard {
     }
 
     // Gov
-    function setLensContracts(
-        address hub,
-        address collectModule
-    ) external onlyGov {
-        if (hub == address(0)) revert Errors.AddressCanNotBeZero();
-        if (collectModule == address(0)) revert Errors.AddressCanNotBeZero();
-
-        lensHub = hub;
-    }
 
     function setMerkleRoot(bytes32 newMerkleRoot) external onlyGov {
         merkleRoot = newMerkleRoot;
@@ -185,6 +171,33 @@ contract TakoOpenLensHub is Ownable, ReentrancyGuard {
     }
 
     // Curator
+    function loanWithRelayer(
+        uint256 index,
+        uint256 curatorId,
+        address to,
+        string calldata contentId
+    ) external nonReentrant {
+        _validateContentIndex(index);
+
+        if (!_relayerWhitelisted[msg.sender]) {
+            revert Errors.NotWhitelisted();
+        }
+
+        Content storage content = _contentByIndex[index];
+
+        if (content.status != DataTypes.AuditStatus.Pending) {
+            revert Errors.BidIsClose();
+        }
+        if (content.bidTime + curateDuration > block.timestamp)
+            revert Errors.NotTimeToClaimYet();
+
+        content.status = DataTypes.AuditStatus.Pass;
+        content.curatorId = curatorId;
+        content.curatorContentId = contentId;
+        _loan(content.bidToken, content.bidAmount, to);
+        emit modifiBidEvent(index, content);
+    }
+
     function loanWithSig(
         uint256 index,
         uint256 curatorId,
@@ -225,7 +238,7 @@ contract TakoOpenLensHub is Ownable, ReentrancyGuard {
         content.status = DataTypes.AuditStatus.Pass;
         content.curatorId = curatorId;
         content.curatorContentId = contentId;
-        _loan(content.bidToken, content.bidAmount);
+        _loan(content.bidToken, content.bidAmount, _msgSender());
         emit modifiBidEvent(index, content);
     }
 
@@ -304,13 +317,13 @@ contract TakoOpenLensHub is Ownable, ReentrancyGuard {
         emit modifiBidEvent(index, _contentByIndex[index]);
     }
 
-    function _loan(address token, uint256 amount) internal {
+    function _loan(address token, uint256 amount, address to) internal {
         uint256 feeAmount = (amount * feeRate) / FEE_DENOMINATOR;
         if (feeAmount > 0) {
             _sendTokenOrETH(token, feeCollector, feeAmount);
         }
         if (amount - feeAmount > 0) {
-            _sendTokenOrETH(token, _msgSender(), amount - feeAmount);
+            _sendTokenOrETH(token, to, amount - feeAmount);
         }
     }
 
