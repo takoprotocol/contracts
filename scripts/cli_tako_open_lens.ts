@@ -9,8 +9,8 @@ const lensHub: { [key: string]: string } = {
 
 const deployed: { [key: string]: string } = {
   [NETWORKS.Mainnet]: "",
-  [NETWORKS.TestNet]: "0xd8abC5094E6C7C93308119cF283cB35A6aEa4BCE",
-  Mumbai: "0xd8abC5094E6C7C93308119cF283cB35A6aEa4BCE",
+  [NETWORKS.TestNet]: "0xC158A4319BC125e315120DbDfBEa8b8343aa3234",
+  Mumbai: "0xC158A4319BC125e315120DbDfBEa8b8343aa3234",
 };
 
 async function main() {

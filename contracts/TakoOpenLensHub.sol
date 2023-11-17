@@ -177,25 +177,26 @@ contract TakoOpenLensHub is Ownable, ReentrancyGuard {
         address to,
         string calldata contentId
     ) external nonReentrant {
-        _validateContentIndex(index);
+       _loanWithRelayer(index, curatorId, to, contentId);
+    }
 
-        if (!_relayerWhitelisted[msg.sender]) {
-            revert Errors.NotWhitelisted();
+
+    function loanBatchWithRelayer(
+        uint256[] calldata index,
+        uint256[] calldata curatorId,
+        address[] calldata to,
+        string[] calldata contentId
+    ) external nonReentrant {
+        if(index.length != curatorId.length || curatorId.length != to.length || to.length != contentId.length) {
+          revert Errors.ParamsInvalid();
         }
-
-        Content storage content = _contentByIndex[index];
-
-        if (content.status != DataTypes.AuditStatus.Pending) {
-            revert Errors.BidIsClose();
+        uint256 indexLength = index.length;
+        for(uint256 i = 0; i < indexLength; ) {
+          _loanWithRelayer(index[i], curatorId[i], to[i], contentId[i]);
+          unchecked {
+            i++;
+          }
         }
-        if (content.bidTime + curateDuration > block.timestamp)
-            revert Errors.NotTimeToClaimYet();
-
-        content.status = DataTypes.AuditStatus.Pass;
-        content.curatorId = curatorId;
-        content.curatorContentId = contentId;
-        _loan(content.bidToken, content.bidAmount, to);
-        emit modifiBidEvent(index, content);
     }
 
     function loanWithSig(
@@ -325,6 +326,33 @@ contract TakoOpenLensHub is Ownable, ReentrancyGuard {
         if (amount - feeAmount > 0) {
             _sendTokenOrETH(token, to, amount - feeAmount);
         }
+    }
+
+    function _loanWithRelayer(
+        uint256 index,
+        uint256 curatorId,
+        address to,
+        string calldata contentId
+    ) internal {
+        _validateContentIndex(index);
+
+        if (!_relayerWhitelisted[msg.sender]) {
+            revert Errors.NotWhitelisted();
+        }
+
+        Content storage content = _contentByIndex[index];
+
+        if (content.status != DataTypes.AuditStatus.Pending) {
+            revert Errors.BidIsClose();
+        }
+        if (content.bidTime + curateDuration > block.timestamp)
+            revert Errors.NotTimeToClaimYet();
+
+        content.status = DataTypes.AuditStatus.Pass;
+        content.curatorId = curatorId;
+        content.curatorContentId = contentId;
+        _loan(content.bidToken, content.bidAmount, to);
+        emit modifiBidEvent(index, content);
     }
 
     function _fetchBidToken(address token, uint256 amount) internal {

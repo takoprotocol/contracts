@@ -64,13 +64,6 @@ makeSuiteCleanRoom("TakoOpenLensHub", () => {
           .whitelistBidToken(await user.getAddress(), true)
       ).to.not.reverted;
     });
-    it("Should success to set lens hub", async () => {
-      await expect(
-        takoOpenLensHub
-          .connect(deployer)
-          .setLensContracts(lensHubMock.address, lensFreeCollectModule.address)
-      ).to.not.reverted;
-    });
     it("Should success to set fee collector", async () => {
       await expect(
         takoOpenLensHub
@@ -294,6 +287,8 @@ makeSuiteCleanRoom("TakoOpenLensHub", () => {
     });
     it("Should success to loan with sig", async () => {
       const officialFee = (BID_AMOUNT * officialFeeRate) / FEE_DENOMINATOR;
+      await EVMIncreaseTime(DURATION);
+      await EVMMine();
       await expect(
         takoOpenLensHub
           .connect(profileOwner)
@@ -310,6 +305,15 @@ makeSuiteCleanRoom("TakoOpenLensHub", () => {
       expect((await takoOpenLensHub.getContentByIndex(1)).status).to.eq(
         AuditStatus.Pass
       );
+    });
+    it("Should success to loan with relayer", async () => {
+      await EVMIncreaseTime(DURATION);
+      await EVMMine();
+      await expect(
+        takoOpenLensHub
+          .connect(relayer)
+          .loanWithRelayer(1, 1, user1.getAddress(), contentId)
+      ).to.not.reverted;
     });
   });
 });

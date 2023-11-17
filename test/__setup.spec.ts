@@ -94,7 +94,7 @@ async function initContract() {
     )) as TakoFarcasterHub;
   takoOpenLensHub = (await takoOpenLensFactory
     .connect(deployer)
-    .deploy(lensHubMock.address, ethers.constants.HashZero)) as TakoOpenLensHub;
+    .deploy(ethers.constants.HashZero)) as TakoOpenLensHub;
   erc20Token = (await erc20TokenFactory
     .connect(deployer)
     .deploy()) as ERC20Token;
